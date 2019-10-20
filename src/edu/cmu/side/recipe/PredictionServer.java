@@ -5,7 +5,6 @@
 package edu.cmu.side.recipe;
 
 import java.io.File;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -20,8 +19,10 @@ import java.net.SocketAddress;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,10 +32,14 @@ import java.util.TreeMap;
 import java.util.Vector;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.logging.FileHandler;
+import java.util.logging.Formatter;
+import java.util.logging.Level;
 import java.util.logging.Logger;
-
+import java.util.logging.SimpleFormatter;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.swing.JOptionPane;
-
 import org.simpleframework.http.Part;
 import org.simpleframework.http.Query;
 import org.simpleframework.http.Request;
@@ -44,19 +49,19 @@ import org.simpleframework.http.core.ContainerServer;
 import org.simpleframework.transport.Server;
 import org.simpleframework.transport.connect.Connection;
 import org.simpleframework.transport.connect.SocketConnection;
-
-
-
-
+import com.fasterxml.jackson.core.type.TypeReference;
+//import com.fasterxml.jackson.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.cmu.side.Workbench;
-import edu.cmu.side.control.ExtractFeaturesControl;
-import edu.cmu.side.control.PredictLabelsControl;
+import edu.cmu.side.control.BuildModelControl;
 import edu.cmu.side.model.Recipe;
 import edu.cmu.side.model.RecipeManager;
 import edu.cmu.side.model.StatusUpdater;
 import edu.cmu.side.model.data.DocumentList;
 import edu.cmu.side.model.data.FeatureTable;
 import edu.cmu.side.model.data.PredictionResult;
+import edu.cmu.side.model.data.ResponseJson;
+import edu.cmu.side.model.data.TrainingResult;
 import edu.cmu.side.model.feature.Feature;
 import edu.cmu.side.model.feature.Feature.Type;
 import edu.cmu.side.model.feature.FeatureHit;
@@ -64,26 +69,16 @@ import edu.cmu.side.plugin.FeaturePlugin;
 import edu.cmu.side.plugin.LearningPlugin;
 import edu.cmu.side.plugin.ModelMetricPlugin;
 import edu.cmu.side.plugin.SIDEPlugin;
-import edu.cmu.side.plugin.WrapperPlugin;
 import edu.cmu.side.plugin.control.PluginManager;
+import edu.cmu.side.util.MyHtmlFormatter;
 import edu.cmu.side.view.util.CSVExporter;
 import edu.cmu.side.view.util.DocumentListTableModel;
-import edu.cmu.side.view.util.ParallelTaskUpdater;
-import edu.cmu.side.view.util.RadioButtonListEntry;
 import edu.cmu.side.view.util.SwingUpdaterLabel;
 import plugins.features.BasicFeatures;
 import plugins.features.ColumnFeatures;
-import weka.classifiers.bayes.NaiveBayes;
 import plugins.learning.WekaBayes;
 import plugins.learning.WekaLogit;
-import edu.cmu.side.control.BuildModelControl;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-//import com.fasterxml.jackson.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.annotation.ObjectIdResolver;
-
-import edu.cmu.side.model.data.TrainingResult;
+import plugins.learning.WekaSVM;
 
 
 
@@ -96,6 +91,13 @@ import edu.cmu.side.model.data.TrainingResult;
  */
 
 public class PredictionServer implements Container {
+
+    static private FileHandler fileTxt;
+    static private SimpleFormatter formatterTxt;
+
+    static private FileHandler fileHTML;
+    static private Formatter formatterHTML;
+    
 	protected static Map<String, Predictor> predictors = new HashMap<String, Predictor>();
 
 	private final Executor executor;
@@ -110,7 +112,21 @@ public class PredictionServer implements Container {
 		SocketAddress address = new InetSocketAddress(port);
 
 		connection.connect(address);
-		System.out.println("Started server on port " + port + ".");
+		logger.setLevel(Level.INFO);
+		logger.fine("Started server on port " + port + ".");
+		
+		fileTxt = new FileHandler("Logging.txt", true);
+        fileHTML = new FileHandler("Logging.html", true);
+
+        // create a TXT formatter
+        formatterTxt = new SimpleFormatter();
+        fileTxt.setFormatter(formatterTxt);
+        logger.addHandler(fileTxt);
+
+        // create an HTML formatter	
+        formatterHTML = new MyHtmlFormatter();
+        fileHTML.setFormatter(formatterHTML);
+        logger.addHandler(fileHTML);
 	}
 
 	@Override
@@ -132,19 +148,23 @@ public class PredictionServer implements Container {
 			long time = System.currentTimeMillis();
 
 			String target = request.getTarget();
-			System.out.println(request.getMethod() + ": " + target);
+			logger.fine(request.getMethod() + ": " + target);
 
 			String answer = null;
 
-			response.setValue("Content-Type", "multipart/form-data");
+			//response.setValue("Content-Type", "multipart/form-data");
 			response.setValue("Server", "HelloWorld/1.0 (Simple 4.0)");
 			response.setValue("Access-Control-Allow-Origin", "*");
-			response.setValue("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+			// Request headers you wish to allow
+			response.setValue("Access-Control-Allow-Headers", "Access-Control-Allow-Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Headers, Origin, X-Requested-With, Content-Type, Accept, Authorization");
+			// Request methods you wish to allow
+			response.setValue("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE, PATCH");
 			response.setDate("Date", time);
 			response.setDate("Last-Modified", time);
 
-			if (target.equals("/upload")) {
-				if (request.getMethod().equals("POST")) {
+			response.setValue("Content-Type", "application/json;charset=utf-8");
+			if (target.equalsIgnoreCase("/upload")) {
+				if (request.getMethod().equalsIgnoreCase("POST")) {
 					answer = handleUpload(request, response);
 				} else {
 					answer = handleGetUpload(request, response);
@@ -164,7 +184,7 @@ public class PredictionServer implements Container {
 						response.setValue("Accuracy",answer);
 						response.setDescription(answer);
 						response.setDescription("OK");
-						System.out.println("response is"+response.getDescription());
+						logger.fine("response is"+response.getDescription());
 					}
 						
 				} else {
@@ -172,10 +192,9 @@ public class PredictionServer implements Container {
 				}
 			}
 			
-			else if (target.equals("/predicttest")) {
+			else if (target.startsWith("/predicttest")) {
 				
-				if (request.getMethod().equals("POST")) {
-					//System.out.println("combobox entry fetched:"+request.getPart("algo").getContent());
+				if (request.getMethod().equalsIgnoreCase("POST")) {
 					answer = handleTestPredict(request, response);
 					if (answer!="")
 					{				
@@ -184,7 +203,7 @@ public class PredictionServer implements Container {
 						response.setValue("Accuracy",answer);
 						response.setDescription(answer);
 						response.setDescription("OK");
-						System.out.println("response is"+response.getDescription());
+						logger.fine("response is"+response.getDescription());
 					}
 						
 				} else {
@@ -192,9 +211,9 @@ public class PredictionServer implements Container {
 				}
 			}
 			
-			else if (target.equals("/uploadtest")) {
+			else if (target.equalsIgnoreCase("/uploadtest")) {
 				
-				if (request.getMethod().equals("POST")) {
+				if (request.getMethod().equalsIgnoreCase("POST")) {
 					
 					answer = handlePredictTest(request, response);
 					if (answer=="Success")
@@ -209,9 +228,9 @@ public class PredictionServer implements Container {
 				}
 			}
 			
-			else if (target.equals("/CSVsave")) {
+			else if (target.equalsIgnoreCase("/CSVsave")) {
 				
-				if (request.getMethod().equals("POST")) {
+				if (request.getMethod().equalsIgnoreCase("POST")) {
 					
 					answer = handleCSVSave(request, response);
 					if (answer!="")
@@ -227,7 +246,7 @@ public class PredictionServer implements Container {
 			}
 
 			else if (target.startsWith("/try")) {
-				if (request.getMethod().equals("POST")) {
+				if (request.getMethod().equalsIgnoreCase("POST")) {
 					answer = handleEvaluate(request, response);
 				} else {
 					answer = handleGetEvaluate(request, response, "<h1>Try it out!</h1>");
@@ -253,8 +272,7 @@ public class PredictionServer implements Container {
 			int code = response.getCode();
 			if (code != 200) {
 				body.println("HTTP Code " + code);
-				//System.out.println("in ");
-				System.out.println("HTTP Code " + code);
+				logger.fine("HTTP Code " + code);
 			}
 
 			body.close();
@@ -312,13 +330,10 @@ public class PredictionServer implements Container {
 		return "<head><title>SIDE Loader</title></head><body>" + "<h1>Document Loader</h1>"
 				+ "<form action=\"predicttest\" method=\"post\" enctype=\"multipart/form-data\">"
 				+ "Document File: <input type=\"file\" name=\"inputfile\"><br>"
-				//+ "Document Nickname:<input type=\"text\" name=\"inputNick\"> "
-				+"<select name=\"prediction_column\"><option value=\"Q: Questioning\">Q: Questioning</option>"
-				+"<option value=\"T: Theorizing/explaining\">T: Theorizing/explaining</option>"
-				+ "<option value=\"E: Evidence\">E: Evidence</option>"
-				+ "<option value=\"R: Referencing  sources\">R: Referencing  sources</option>"
-				+ "<option value=\"Complexity_level\">Complexity_level</option>"
-				+ "</select><br>"
+				+ "Request ID: <input type=\"text\" name=\"requestID\" value=\"123456\"> "
+				+ "JSON Request: <input type=\"text\" name=\"jsonString\" value=\"\"> "
+				+ "Requestor: <input type=\"text\" name=\"requestorName\" value=\"\"> "
+				+ "<br>"
 				+ "<input type=\"submit\" name=\"Submit\" value=\"Upload File for Extraction\">" + "</form>" + "</body>";
 	}	
 	
@@ -360,7 +375,7 @@ public class PredictionServer implements Container {
 
 		String modelName = request.getPath().getPath(1).substring(1);
 		String answer = checkModel(response, modelName);
-		if (!answer.equals("OK")) {
+		if (!answer.equalsIgnoreCase("OK")) {
 			return answer;
 		}
 
@@ -429,7 +444,7 @@ public class PredictionServer implements Container {
 		Map<String, Boolean> columns = new TreeMap<String, Boolean>();
 		for (String s : d.allAnnotations().keySet())
 		{
-			if (!annot.equals(s)) columns.put(s, false);
+			if (!annot.equalsIgnoreCase(s)) columns.put(s, false);
 		}
 		for (String s : d.getTextColumns())
 		{
@@ -440,7 +455,7 @@ public class PredictionServer implements Container {
 		d.setTextColumn("text", true);
 		Workbench.update(RecipeManager.Stage.DOCUMENT_LIST);
 		
-	    System.out.println("Completed process of load file");
+	    logger.fine("Completed process of load file");
 	    
 		RecipeManager rp=Workbench.getRecipeManager();
 		Recipe plan=Workbench.recipeManager.fetchDocumentListRecipe(d);
@@ -450,14 +465,14 @@ public class PredictionServer implements Container {
 		FeaturePlugin c = new ColumnFeatures();
 		Collection<FeaturePlugin> plugins = new HashSet<FeaturePlugin>();
 		plugins.add(b);
-		if(algo.equals("logistic"))
+		if(algo.equalsIgnoreCase("logistic"))
 		{
 			plugins.add(c);
 		}
 		
 		Map<String, String> plugin_config_naive = new HashMap<String, String>(); 
 		
-		if(algo.equals("naive"))
+		if(algo.equalsIgnoreCase("naive"))
 		{
 			plugin_config_naive.put("Bigrams","false");
 			plugin_config_naive.put("Contains Non-Stopwords","false");
@@ -476,7 +491,7 @@ public class PredictionServer implements Container {
 			plugin_config_naive.put("Word/POS Pairs","false");
 			plan.addExtractor(b, plugin_config_naive);
 		}
-		else if (algo.equals("logistic"))
+		else if (algo.equalsIgnoreCase("logistic"))
 		{
 			
 			plugin_config_naive.put("Bigrams","true");
@@ -518,7 +533,7 @@ public class PredictionServer implements Container {
 				}
 
 			} 
-			System.out.println("size of hits"+hits.size());
+			logger.fine("size of hits"+hits.size());
 			if (!halt)
 			{
 				update.update("Building Feature Table");
@@ -535,10 +550,10 @@ public class PredictionServer implements Container {
 		}
 	
 		Collection<Feature> features=plan.getFeatureTable().getSortedFeatures();
-		System.out.println("Number of features extracted:"+ features.size());
-		System.out.println("Created Feature Extraction!!");
+		logger.fine("Number of features extracted:"+ features.size());
+		logger.fine("Created Feature Extraction!!");
 		String s = handleBuildModel(plan,algo);
-		System.out.println(s);
+		logger.fine(s);
 		//deleting the saved file
 		File f= new File(destpath+"/"+filename);
 		//f.delete();
@@ -547,37 +562,36 @@ public class PredictionServer implements Container {
 	
 	public String handleBuildModel(Recipe plan,String algo) {
 		String accuracy="";
-	
 		Map<LearningPlugin, Boolean> learningPlugins;
 		SIDEPlugin[] learners = PluginManager.getSIDEPluginArrayByType("model_builder");
 		
-		if (algo.equals("naive"))
+		if (algo.equalsIgnoreCase("naive"))
 		{
 			plan=plan.addLearnerToRecipe(plan,(LearningPlugin)learners[2] , learners[2].generateConfigurationSettings());
 			
 			WekaBayes wb= new WekaBayes();
 			plan.setLearnerSettings(wb.generateConfigurationSettings());
 		}
-		else if (algo.equals("logistic"))
+		else if (algo.equalsIgnoreCase("logistic"))
 		{
-			Map<String,String> mp=learners[0].generateConfigurationSettings();
-			for(String k:mp.keySet())
-			{
-				System.out.println("key:"+mp.get(k));
-				System.out.println("value:"+mp.get(k));
-			}
 			plan=plan.addLearnerToRecipe(plan,(LearningPlugin)learners[0] , learners[0].generateConfigurationSettings());
 			WekaLogit wl = new WekaLogit();
 			plan.setLearnerSettings(wl.generateConfigurationSettings());
 		}
+		else if (algo.equalsIgnoreCase("svm"))
+		{
+			plan=plan.addLearnerToRecipe(plan,(LearningPlugin)learners[1] , learners[1].generateConfigurationSettings());
+			WekaSVM wl = new WekaSVM();
+			plan.setLearnerSettings(wl.generateConfigurationSettings());
+		}
 		
-		if (algo.equals("naive"))
+		if (algo.equalsIgnoreCase("naive"))
 		{
 			BuildModelControl.updateValidationSetting("annotation", "E: Evidence");
 		}
 		else
 		{
-			BuildModelControl.updateValidationSetting("annotation", "Complexity_type");		
+			//BuildModelControl.updateValidationSetting("annotation", "Complexity_type");		
 		}
 		
 		BuildModelControl.updateValidationSetting("foldMethod", "AUTO");
@@ -588,45 +602,57 @@ public class PredictionServer implements Container {
 		BuildModelControl.updateValidationSetting("testSet", plan.getDocumentList());
 		BuildModelControl.updateValidationSetting("type", "CV");
 		
+		Map<String, Serializable> valSetting = BuildModelControl.getValidationSettings();
+		
+		for(String s:valSetting.keySet()) {
+			logger.fine("BuildModelControl KEY: " + s + " value: " + valSetting.get(s));
+		}
 		
 		try
 		{
 			FeatureTable current = plan.getTrainingTable();
-			System.out.println("training table size:"+current.getSize());
+			logger.fine("training table size:"+current.getSize());
 			if (current != null)
 			{
 				TrainingResult results = null;
 				if (results == null)
 				{
-					logger.info("Training new model.");
-					System.out.println("here!");
-					System.out.println("size of learner settings:"+plan.getLearnerSettings().size());
-					for(String a:plan.getLearnerSettings().keySet())
-					{
-						System.out.println("key:"+a);
-						System.out.println("value:"+plan.getLearnerSettings().get(a));
-						
-					}
-					System.out.println(BuildModelControl.getValidationSettings());
-					System.out.println(plan.getWrappers().toString());
-					System.out.println("leaner:"+plan.getLearner());
-					System.out.println("updater:"+BuildModelControl.getUpdater());
+					logger.fine("Training new model.");
+					logger.fine("here!");
+					logger.fine("size of learner settings:"+plan.getLearnerSettings().size());
+					
+					logger.fine(BuildModelControl.getValidationSettings().toString());
+					logger.fine(plan.getWrappers().toString());
+					logger.fine("learner:"+plan.getLearner());
+					logger.fine("updater:"+BuildModelControl.getUpdater());
 					results = plan.getLearner().train(current, plan.getLearnerSettings(), BuildModelControl.getValidationSettings(), plan.getWrappers(),
 							BuildModelControl.getUpdater());
-					System.out.println("trained size:"+results.getTrainingTable().getSize());
+					logger.fine("trained size:"+results.getTrainingTable().getSize());
 				}
 
 				if (results != null)
 				{
-					System.out.println("Fetched Results successfully");
+					logger.fine("Fetched Results successfully");
 					plan.setTrainingResult(results);
 					results.setName("BuiltModel");
 
 					plan.setLearnerSettings(plan.getLearner().generateConfigurationSettings());
 					plan.setValidationSettings(new TreeMap<String, Serializable>(BuildModelControl.getValidationSettings()));
-					System.out.println("confusion matrix key set"+results.getConfusionMatrix().keySet().size());
-					System.out.println("Evaluation:"+results.getEvaluationTable().getSize());
+					logger.fine("confusion matrix key set: "+results.getConfusionMatrix().keySet().size());
+					logger.fine("Text Confusion Matrix: " + results.getTextConfusionMatrix());
+					logger.fine("Evaluation: "+results.getEvaluationTable().getSize());
 					Map<String, String> allKeys = new TreeMap<String, String>();
+
+					//  Map<String, List<Double>> distributions = results.getDistributions();
+					//  List<Double> values = new ArrayList<Double>();
+					//  for(String s:distributions.keySet()){
+					//  	logger.fine("Key: " + s);
+					//  	values = distributions.get(s);
+					//  	for(Double dis:values){
+					//  		logger.fine("Key: " + s + " Prediction: " + dis);
+					//  	}
+					//  }
+
 						Collection<ModelMetricPlugin> plugins = BuildModelControl.getModelEvaluationPlugins();
 						for(ModelMetricPlugin plugin : plugins){
 							Map<String, String> evaluations = plugin.evaluateModel(results, plugin.generateConfigurationSettings());
@@ -644,23 +670,30 @@ public class PredictionServer implements Container {
 							allKeys.putAll(evaluations);
 						}			
 						
-					System.out.println("Model Evaluation Matrix");
-					for(String s:allKeys.keySet())
-					{	if (s.equals("Accuracy"))
+					logger.fine("Model Evaluation Matrix");
+					StringBuilder mapAsString = new StringBuilder("{");
+					
+					for (String key : allKeys.keySet()) {
+						mapAsString.append(key + "=" + allKeys.get(key) + ", ");
+						if (key.equalsIgnoreCase("Accuracy"))
 						{
-							accuracy=allKeys.get(s);
+							accuracy=allKeys.get(key);
 						}
 					}
-					
+
+					mapAsString.append("}");
+
+					logger.fine(mapAsString.toString());				
 				}
 			}
 		}
 		catch (Exception e)
 		{
-			
+			logger.fine(e.getMessage());
 			plan = null;
 			
-		}
+		}		
+
 		Workbench.update(RecipeManager.Stage.TRAINED_MODEL);
 		Workbench.getRecipeManager().addRecipe(plan);  
 		return accuracy;
@@ -668,24 +701,122 @@ public class PredictionServer implements Container {
 	
 	protected String handleTestPredict(Request request, Response response) throws IOException, FileNotFoundException {
 		//String accuracy="";
-		String algo="";
+		String annot = "all_type";
+		String jsonStr = "";
+
+		ObjectMapper objectMapper = new ObjectMapper();
+		ResponseJson rj = classifyPrediction(request, response, annot);	
+
+		if(!rj.getPredicted().equalsIgnoreCase("L-IS")){
+			ResponseJson rsj  = classifyPrediction(request, response, rj.getPredicted());
+
+			ResponseJson rsjXT = null;
+			if(rsj.getPredicted().equalsIgnoreCase("L-X")||rsj.getPredicted().equalsIgnoreCase("L-T"))
+				rsjXT = classifyPrediction(request, response, rsj.getPredicted());	
+			
+			logger.fine("--- Start Prediction of all_type---");
+		
+			logger.fine("Accuracy:   " + rj.getAccuracy());		
+			logger.fine("Level: 		" + rj.getLevel());	
+			logger.fine("Prediction: " + rj.getPredicted());
+			
+			logger.fine("--- End	  Prediction of all_type---");	
+			
+			logger.fine("--- Start Prediction of " + rsj.getPredicted() + "---");
+			
+			logger.fine("Accuracy:   " + rsj.getAccuracy());		
+			logger.fine("Level: 		" + rsj.getLevel());	
+			logger.fine("Prediction: " + rsj.getPredicted());
+			
+			logger.fine("--- End	  Prediction of " + rsj.getPredicted() + "---");
+			
+			if(rsjXT==null) {
+				jsonStr = objectMapper.writeValueAsString(rsj);
+				writeToDB(rsj);
+			}
+			else{
+				jsonStr = objectMapper.writeValueAsString(rsjXT);
+				
+				logger.fine("--- Start Prediction of " + rsjXT.getPredicted() + "---");
+				
+				logger.fine("Accuracy:   " + rsjXT.getAccuracy());		
+				logger.fine("Level: 		" + rsjXT.getLevel());	
+				logger.fine("Prediction: " + rsjXT.getPredicted());
+				
+				logger.fine("--- End	  Prediction of " + rsjXT.getPredicted() + "---");
+				writeToDB(rsjXT);
+			}
+		}else{
+			//Insufficient Data
+			jsonStr = objectMapper.writeValueAsString(rj);
+			writeToDB(rj);
+		}
+		logger.info("json: " + jsonStr);
+		logger.fine("json: " + jsonStr);
+		return jsonStr;
+	}
+	
+	private ResponseJson classifyPrediction(Request request, Response response, String annot) throws IOException, FileNotFoundException {
+		String algo="logistic";
+		boolean type = true;
+		String jsonStr = "";
 		String train_file = "";
-		String annot = request.getPart("prediction_column").getContent();
-		System.out.println("annot:"+annot);
-		if(annot.equals("Complexity_level"))
+		String predictedLabel = ""; //request.getPart("prediction_column").getContent();
+		ResponseJson rJson = null;
+		
+		// idea statements
+		if(annot.equalsIgnoreCase("L-I"))
 		{
 			train_file="Train_KF2.csv";
-			algo="logistic";
+			predictedLabel = "Complexity_level";
+			annot = "Complexity_level";
 		}
-		else
+		// questions
+		else if(annot.equalsIgnoreCase("L-Q"))
 		{
-			train_file="Train_KF1.csv";
-			algo="naive";
+			train_file="Train_question.csv";
+			predictedLabel = "question_type";
+			annot="question_type";
 		}
-		System.out.println("algo:"+algo);
+		// all types
+		else if(annot.equalsIgnoreCase("all_type"))
+		{
+			//0.6288659793814433
+			train_file="Train_all_types.csv";
+			predictedLabel = "all_type";
+			annot="all_type";
+		}
+		// resources
+		else if(annot.equalsIgnoreCase("L-R"))
+		{
+			train_file="Train_resource.csv";
+			predictedLabel = "resource_type";
+			annot="resource_type";
+		}
+		// explanations
+		else if(annot.equalsIgnoreCase("L-X"))
+		{
+			train_file="Train_KF_X.csv";
+			predictedLabel = "Complexity_level";
+			annot = "Complexity_level";
+		}
+		// facts
+		else if(annot.equalsIgnoreCase("L-T"))
+		{
+			train_file="Train_KF_T.csv";
+			predictedLabel = "Complexity_level";
+			annot = "Complexity_level";
+		}
+
+		logger.fine("annot: "+annot);
+
+		logger.fine("predictedLabel: "+predictedLabel);
+
+		logger.fine("algo: "+algo);
 		final String destpath = Workbench.dataFolder.getAbsolutePath();
 		File f= new File(destpath+"/"+train_file);
-		 Set<String> files = new HashSet<String>();
+		logger.fine("Training file dir: "+destpath+"/"+train_file);
+		Set<String> files = new HashSet<String>();
 			files.add(train_file);
 			//creating a document list and setting all the required parameters for feature extraction
 			DocumentList d = new DocumentList(files);
@@ -699,7 +830,7 @@ public class PredictionServer implements Container {
 			Map<String, Boolean> columns = new TreeMap<String, Boolean>();
 			for (String s : d.allAnnotations().keySet())
 			{
-				if (!annot.equals(s)) columns.put(s, false);
+				if (!annot.equalsIgnoreCase(s)) columns.put(s, false);
 			}
 			for (String s : d.getTextColumns())
 			{
@@ -709,16 +840,16 @@ public class PredictionServer implements Container {
 			d.setTextColumn("text", true);
 			Workbench.update(RecipeManager.Stage.DOCUMENT_LIST);
 			
-		    System.out.println("Completed process of load file");
+		    logger.fine("Completed process of load file");
 		    
 			RecipeManager rp=Workbench.getRecipeManager();
-			Recipe plan=Workbench.recipeManager.fetchDocumentListRecipe(d);
+			Recipe plan = Workbench.recipeManager.fetchDocumentListRecipe(d);
 			//adding an extractor to recipe i.e Basic Features
 			FeaturePlugin b = new BasicFeatures();
 			FeaturePlugin c = new ColumnFeatures();
 			Collection<FeaturePlugin> plugins = new HashSet<FeaturePlugin>();
 			plugins.add(b);
-			if(algo.equals("logistic"))
+			if(algo.equalsIgnoreCase("logistic") || algo.equalsIgnoreCase("svm"))
 			{
 				plugins.add(c);
 			}
@@ -732,9 +863,9 @@ public class PredictionServer implements Container {
 	         */
 	        try {
 	        	
-	        	if(algo.equals("naive"))
+	        	if(algo.equalsIgnoreCase("naive"))
 	        	{
-	        		System.out.println("path to check json:"+destpath+"/Question.json");
+	        		logger.fine("path to check json:"+destpath+"/Question.json");
 	        		map1 = mapper.readValue(new File(destpath+
 		                    "/Question.json"), new TypeReference<Map<String, Object>>() {
 		            }); 
@@ -745,7 +876,7 @@ public class PredictionServer implements Container {
 	        		}
 	        		plan.addExtractor(b, plugin_config_naive);
 	        	}
-	        	else if (algo.equals("logistic"))
+	        	else if (algo.equalsIgnoreCase("logistic"))
 				{
 	        		map1 = mapper.readValue(new File(destpath+
 		                    "/Complexity.json"), new TypeReference<Map<String, Object>>() {
@@ -755,20 +886,26 @@ public class PredictionServer implements Container {
 	        			plugin_config_naive.put(w, map1.get(w).toString());
 	        		}
 	        		plan.addExtractor(b, plugin_config_naive);
-	        		Map<String, String> plugin_config_log = new HashMap<String, String>(); 
-					plugin_config_log.put("Complexity_type", "NOMINAL");
+					Map<String, String> plugin_config_log = new HashMap<String, String>(); 
+					// increase accuracy
+					//if (type&&annot.equalsIgnoreCase("Complexity_level"))
+					//	plugin_config_log.put("Complexity_type", "NOMINAL");
 					//plugin_config_log.put("E: Evidence", "NOMINAL");
 					plan.addExtractor(c, plugin_config_log);
 				}
-	        	
-	         /*   Map<String, Object> carMap = mapper.readValue(new File(
-	                    "result.json"), new TypeReference<Map<String, Object>>() {
-	            });
-	 
-	            System.out.println("Car : " + carMap.get("car"));
-	            System.out.println("Price : " + carMap.get("price"));
-	            System.out.println("Model : " + carMap.get("model"));
-	            System.out.println("Colors : " + carMap.get("colors"));  */
+	        	else if (algo.equalsIgnoreCase("svm"))
+				{
+	        		map1 = mapper.readValue(new File(destpath+
+		                    "/Complexity.json"), new TypeReference<Map<String, Object>>() {
+		            }); 
+	        		for(String w:map1.keySet())
+	        		{
+	        			plugin_config_naive.put(w, map1.get(w).toString());
+	        		}
+	        		plan.addExtractor(b, plugin_config_naive);
+					Map<String, String> plugin_config_log = new HashMap<String, String>(); 
+					plan.addExtractor(c, plugin_config_log);
+				}
 	 
 	        } catch (Exception e) {
 	            e.printStackTrace();
@@ -836,7 +973,7 @@ public class PredictionServer implements Container {
 					}
 
 				} 
-				System.out.println("size of hits"+hits.size());
+				logger.fine("size of hits"+hits.size());
 				if (!halt)
 				{
 					update.update("Building Feature Table");
@@ -853,90 +990,226 @@ public class PredictionServer implements Container {
 			}
 		
 			Collection<Feature> features=plan.getFeatureTable().getSortedFeatures();
-			System.out.println("Number of features extracted:"+ features.size());
-			System.out.println("Created Feature Extraction!!");
-			String s = handleBuildModel(plan,algo);
-			System.out.println(s);
+			logger.fine("Number of features extracted:"+ features.size());
+			logger.fine("Created Feature Extraction!!");
+			jsonStr = handleBuildModel(plan,algo);
+			logger.fine(jsonStr);
 			
 			//predict the testing data
 			String answer="";
 			Collection<Recipe> recipelist=Workbench.getRecipeManager().getRecipeCollectionByType(RecipeManager.Stage.TRAINED_MODEL);
 			
 			List<Recipe> rplist=new ArrayList<Recipe>(recipelist);
-			Recipe trainedModel= rplist.get(0);
+			Recipe trainedModel= rplist.get(rplist.size()-1);
 			boolean useEvaluation=false;
-			boolean showDists=false;
+			boolean showDists=true;
 			boolean overwrite=false;
 			DocumentList originalDocs;
 			DocumentList newDocs = null;
 			Exception ex = null;
 			String name="PredictedTestData";
+			
+			final Query query = request.getQuery();
+			String requestID = "", jsonString = "", typeString = "";
+			String currentTimeStamp = new SimpleDateFormat("MM-dd-yyyy").format(new Date());
+			String requestorName = "KF";
+			
 			try
-			{
-				//create documentlist of new test data
-				
-				Part part = request.getPart("inputfile");
-				String file_Name = part.getFileName();
-				System.out.println("name of input file"+file_Name);
-				//copy the uploaded file into testdata folder
-				 //destpath = Workbench.dataFolder.getAbsolutePath();
-			    final Part filePart = request.getPart("inputfile");
-			    final String filename = file_Name.substring(Math.max(file_Name.lastIndexOf("/"), file_Name.lastIndexOf("\\"))+1);
-			    OutputStream out = null;
-			    InputStream filecontent = null;
-			    try {
-			        out = new FileOutputStream(new File(destpath + File.separator
-			                + filename));
-			        filecontent = filePart.getInputStream();
-			        int read = 0;
-			        final byte[] bytes = new byte[1024];
+			{		
+				if( query != null && query.get("jsonString") != null){		
+					
+					requestID = (String) query.get("requestID");
+					jsonString = preprocessRawString((String) query.get("jsonString"));
+					requestorName = (String) query.get("requestorName");	
 
-			        while ((read = filecontent.read(bytes)) != -1) {
-			            out.write(bytes, 0, read);
-			        }
-			    } catch (FileNotFoundException fne) {
-			    	System.err.println("Error in prediction server");
-			    } finally {
-			        if (out != null) {
-			            out.close();
-			        }
-			        if (filecontent != null) {
-			            filecontent.close();
-			        }
-			    }
-			    
-			    Set<String> testfiles = new HashSet<String>();
-			    testfiles.add(file_Name); 
+					logger.fine("requestID: " + requestID);
+					logger.fine("JSON: " + jsonString);	
+					//jsonString = request.getPart("jsonStr").getContent();
+					// if(query.get("typeString")==null)
+					// 	typeString = "";
+					// else				
+					// 	typeString = (String) query.get("typeString");	
+					//logger.fine("query Complexity_type: " + typeString);
+				}
+	
+				if( request.getPart("requestID") != null ){
+					requestID = request.getPart("requestID").getContent();
+					jsonString = preprocessRawString(request.getPart("jsonString").getContent());
+					requestorName = request.getPart("requestorName").getContent();	
+
+					logger.fine("requestID: " + requestID);	
+					logger.fine("JSON: " + jsonString);				
+					// typeString = request.getPart("Complexity_type").getContent();
+					// logger.fine("Complexity_type: " + typeString);
+				}
+				logger.fine("annot: " + annot);
+				logger.fine("recipelist size: " + recipelist.size());
+
 				//creating a document list and setting all the required parameters for feature extraction
-				originalDocs = new DocumentList(testfiles);
+				//originalDocs = new DocumentList(testfiles);
 				
-				originalDocs.setTextColumn("text", true);
+				// json string must either be a url
+				// or sentence has >= three words
+				if( jsonString.equalsIgnoreCase("    i need to understand  --") 
+				|| jsonString.equalsIgnoreCase("    my theory  - test-") 
+				|| jsonString.equalsIgnoreCase("    my theory  --") 
+				|| jsonString.equalsIgnoreCase("    putting our knowledge together  - i know that the anthills-") 
+				|| jsonString.equalsIgnoreCase("    this theory cannot explain  - why animals-") 
+				|| jsonString.equalsIgnoreCase("I agree with you too") 
+				|| jsonString.equalsIgnoreCase("i dont know") 
+				|| jsonString.equalsIgnoreCase("so dark") 
+				|| jsonString.equalsIgnoreCase("testing this")){
+					// Insufficient data. Please write more.
+					rJson = new ResponseJson(requestID, "L-IS", "", jsonStr, "", "", "", "");
+				} else //if( 
+				//	|| (jsonString.contains(" ")&&jsonString.split(" ").length>2)
+				//	(!jsonString.contains(" ")&&jsonString.contains("http")) ) 
+				{
+					originalDocs = new DocumentList(annot, jsonString, typeString);
+					
+					originalDocs.setTextColumn("text", true);
 
 					Predictor predictor = new Predictor(trainedModel, name);
+					// set "show distribution" to be true
 					newDocs = predictor.predict(originalDocs, name, showDists, overwrite);
 					
 					String[] a=newDocs.getAnnotationNames();
-					System.out.println("columns of new doc:");
-					for(String q:a)	
-					{
-						System.out.println(q);
+					Map<String, List<String>> allAnnotations = newDocs.allAnnotations();
+
+					// get distribution
+					String key1="", key2 = "";
+					for(String s:allAnnotations.keySet()){
+						// if(allAnnotations.get(s)!=null)
+						// if(s.equalsIgnoreCase("all_type"))
+						// 	continue;
+						logger.fine("Predicted Label: " + s + " Predicted Label likelihood: " + allAnnotations.get(s).get(0));
+						if(!s.equalsIgnoreCase(predictedLabel)&&!s.equalsIgnoreCase("PredictedTestData")&&key1.equalsIgnoreCase(""))
+							key1 = s;
+
+						if(!s.equalsIgnoreCase(predictedLabel)&&!s.equalsIgnoreCase("PredictedTestData")
+							&&!key1.equalsIgnoreCase("")&&!key1.equalsIgnoreCase(s)&&key2.equalsIgnoreCase(""))
+							key2 = s;
+					}
+
+					List<String> level = allAnnotations.get(predictedLabel);
+					List<String> predicted = allAnnotations.get("PredictedTestData");
+					List<String> key1Str = allAnnotations.get(key1);
+					List<String> key2Str = allAnnotations.get(key2);
+
+					// manual classification
+					if(!predicted.get(0).contains("L-R") && jsonString.contains("http"))
+						predicted.set(0, "L-R");
+
+					// manual question classification
+					// filter "Train_question.csv (question_type_prediction).csv" by "PredictedTestData_L-Q" column
+					// using threshold 0.35
+					String predictedLQ = "PredictedTestData_L-Q";
+					if(allAnnotations.keySet().contains(predictedLQ)) {
+						double lq = Double.parseDouble(allAnnotations.get(predictedLQ).get(0));
+						if(lq > 0.35) {
+							predicted.set(0, "L-Q");
+						}
 					}
 					
+					// filter "ComplexityPrediction -train resource.csv" by "PredictedTestData_L-R" column
+					// using threshold 0.24
+					String predictedLR = "PredictedTestData_L-R";
+					if(allAnnotations.keySet().contains(predictedLR)) {
+						double lq = Double.parseDouble(allAnnotations.get(predictedLR).get(0));
+						if(lq > 0.24) {
+							predicted.set(0, "L-R");
+						}
+					}
+
+					logger.fine("Predicted Label1: "+ key1 + " Predicted Label1: "+key2);
+					logger.fine("Predicted Label1 likelihood: "+allAnnotations.get(key1).get(0) + " Predicted Label2 likelihood: "+allAnnotations.get(key2).get(0));
+					
+					rJson = new ResponseJson(requestID, predicted.get(0).toUpperCase(), level.get(0), jsonStr, key1, key2, key1Str.get(0), key2Str.get(0));
+					
+				}
+				// insufficient data
+				// two criteria: # of words < 3
+				rJson.setFeedbackTextByPredicted(rJson.getPredicted());
+				rJson.setRequestTimestamp(currentTimeStamp);
+				rJson.setRequesterName(requestorName);
+				rJson.setNoteText(jsonString);
+				rJson.setNoteID(requestID); // noteID???
 			}
 			catch(Exception e)
 			{
-				ex = e;
-				
-			}
-			if(newDocs.getSize()!=0)
-			{
-				answer="Success";
+				logger.fine(e.getMessage());
+				e.printStackTrace();
+				ex = e;				
 			}
 			
+			// if(newDocs.getSize()!=0)
+			// {
+			// 	answer="Success";
+			// }
+			
 			Workbench.getRecipeManager().deleteRecipe(trainedModel);
-			trainedModel.setDocumentList(newDocs);
-			Workbench.getRecipeManager().addRecipe(trainedModel);
-			return s;
+			// trainedModel.setDocumentList(newDocs);
+			// Workbench.getRecipeManager().addRecipe(trainedModel);
+			
+			return rJson;
+	}
+
+	protected String getFeedbackText(String predicted){
+		String feedbackText = "";
+		
+		if("L-RF".equalsIgnoreCase(predicted)){
+			feedbackText = "Thanks for sharing this resource. \n" + 
+					"-Can you say more? Why is this resource useful for our knowledge building?";
+		}else if("L-RS".equalsIgnoreCase(predicted)){
+			feedbackText = "Thank you for sharing this piece of our puzzle. Keep thinking and posting!";
+		}else if("L-QF".equalsIgnoreCase(predicted)){
+			feedbackText = "Good start with your wondering!\n" + 
+					"-Can you say more about your question or thought?";
+		}else if("L-QS".equalsIgnoreCase(predicted)){
+			feedbackText = "Good job! Keep researching and sharing your ideas!";
+		}else if("L-F".equalsIgnoreCase(predicted)){
+			feedbackText = "You are sharing some interesting information.  \n" + 
+					"-Can you add more details or say more about what this means?";
+		}else if("L-EF".equalsIgnoreCase(predicted)){
+			feedbackText = "Thanks for sharing this interesting information.  \n" + 
+					"-Can you explain how this exactly works, and why?";
+		}else if("L-E".equalsIgnoreCase(predicted)){
+			feedbackText = "This looks like an interesting idea. \n" + 
+					"-	Can you say more?";
+		}else if("L-EE".equalsIgnoreCase(predicted)){
+			feedbackText = "Good job!  This looks like a great note! Encourage your peers to read it. Think about what you need to further research.";
+		}
+		
+		return feedbackText;
+	}
+	
+	private void writeToDB(ResponseJson rj) {
+		
+	}
+
+	protected String preprocessRawString(String jsonStr) throws IOException {
+		String rtn = "";
+		final String destpath = Workbench.dataFolder.getAbsolutePath();
+		// PorterStemmer stemmer = new PorterStemmer();
+
+		
+		//.toLowerCase()
+		// remove punctuations except "-" and numbers
+		ArrayList<String> allWords = Stream.of(jsonStr.replaceAll("[^a-zA-Z- ]", "").split(" ")).collect(Collectors.toCollection(ArrayList<String>::new));
+		
+		// List<String> stopwords = Files.readAllLines(Paths.get(destpath + File.separator + "nlp_en_stop_words.txt"));
+		// allWords.removeAll(stopwords);
+		
+		// stemming
+		// int i = 0;
+		// for(String s:allWords) {
+		// 	allWords.set(i, stemmer.stem(s));
+		// 	i++;
+		// }
+
+		rtn = allWords.stream().collect(Collectors.joining(" ")).toLowerCase();
+
+		return rtn;
 	}
 	
 	protected String handleUpload(Request request, Response response) throws IOException, FileNotFoundException {
@@ -950,7 +1223,7 @@ public class PredictionServer implements Container {
 				nick = path.replace(".model.side", "");
 			}
 
-			if (nick.isEmpty() || path.equals("null")) {
+			if (nick.isEmpty() || path.equalsIgnoreCase("null")) {
 				response.setCode(400);
 				return "upload requires both serialized model file and model name.";
 			}
@@ -968,15 +1241,15 @@ public class PredictionServer implements Container {
 				return nick + " already exists on this server.";
 			} else {
 				// TODO: authentication?
-				System.out.println(f.getAbsolutePath());
+				logger.fine(f.getAbsolutePath());
 				FileChannel fo = new FileOutputStream(f).getChannel();
 				ReadableByteChannel po = Channels.newChannel(part.getInputStream());
 				long transferred = fo.transferFrom(po, 0, Integer.MAX_VALUE);
-				System.out.println("wrote " + transferred + " bytes.");
+				logger.fine("wrote " + transferred + " bytes.");
 
 				Long when = System.currentTimeMillis();
 				boolean attached = attachModel(nick, f.getAbsolutePath());
-				System.out.println("Attach model took " + (System.currentTimeMillis() - when) / 1000.0 + " seconds");
+				logger.fine("Attach model took " + (System.currentTimeMillis() - when) / 1000.0 + " seconds");
 
 				if (attached)
 					return "received " + path + ": " + transferred + " bytes.\nModel attached as /predict/" + nick + "";
@@ -1048,7 +1321,7 @@ public class PredictionServer implements Container {
 		{
 			CSVExporter.exportToCSV(model, recipe.getDocumentList().getName()); 
 		}
-		System.out.println("Saved CSV file!");
+		logger.fine("Saved CSV file!");
 		return "Success";
 		
 	}
@@ -1068,9 +1341,9 @@ public class PredictionServer implements Container {
 
 			Long when = System.currentTimeMillis();
 			checkModel(response, model);
-			System.out.println("Check model took " + (System.currentTimeMillis() - when) / 1000.0 + " seconds");
+			logger.fine("Check model took " + (System.currentTimeMillis() - when) / 1000.0 + " seconds");
 
-			System.out.println("using model " + model + " on " + instances.size() + " instances...");
+			logger.fine("using model " + model + " on " + instances.size() + " instances...");
 			for (Comparable label : predictors.get(model).predict(instances)) {
 				answer += label + " ";
 			}
@@ -1119,7 +1392,7 @@ public class PredictionServer implements Container {
 		}
 
 		// initSIDE();
-		int port = 8000;
+		int port = 9098;
 
 		int start = 0;
 		if (args.length > 0 && !args[0].contains(":")) {
@@ -1141,10 +1414,10 @@ public class PredictionServer implements Container {
 		}
 
 		if (predictors.isEmpty()) {
-			System.out.println("Warning: no models attached yet. Use http://localhost:" + port + "/uploadinput");
+			logger.fine("Warning: no models attached yet. Use http://localhost:" + port + "/uploadinput");
 		}
 
-		serve(port, 5);
+		serve(port, 100);
 
 	}
 
@@ -1152,7 +1425,7 @@ public class PredictionServer implements Container {
 	 * 
 	 */
 	protected static void printUsage() {
-		System.out.println("usage: side_server.sh [port] model_nickname:path/to/model.side ...");
+		logger.fine("usage: side_server.sh [port] model_nickname:path/to/model.side ...");
 	}
 
 	/**
@@ -1163,7 +1436,7 @@ public class PredictionServer implements Container {
 	 */
 	protected static boolean attachModel(String nick, String modelPath) {
 		try {
-			System.out.println("attaching " + modelPath + " as " + nick);
+			logger.fine("attaching " + modelPath + " as " + nick);
 			Predictor predict = new Predictor(modelPath, "class");
 			predictors.put(nick, predict);
 			return true;

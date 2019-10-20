@@ -220,6 +220,39 @@ public class DocumentList implements Serializable
 			addAnnotation(ann, annotations.get(ann), false);
 		}
 	}
+	
+	// wrap a single unannotated plain-text instance as a DocumentList
+	public DocumentList(String annot, String jsonString, String type)
+	{
+
+		List<String> firstColumn = new ArrayList<String>();
+		List<String> secColumn = new ArrayList<String>();
+		List<String> lastColumn = new ArrayList<String>();
+
+		if(annot.equalsIgnoreCase("Complexity_level")){
+			firstColumn.add("");
+			addAnnotation("Complexity_level", firstColumn, false);
+			//secColumn.add(type);
+			//addAnnotation("Complexity_type", secColumn, false);
+		} else if (annot.equalsIgnoreCase("question_type")){
+			firstColumn.add("");
+			addAnnotation("question_type", firstColumn, false);
+		} else if (annot.equalsIgnoreCase("all_type")){
+			firstColumn.add("");
+			addAnnotation("all_type", firstColumn, false);
+		} else if (annot.equalsIgnoreCase("resource_type")){
+			firstColumn.add("");
+			addAnnotation("resource_type", firstColumn, false);			
+		}
+
+		lastColumn.add(jsonString);
+
+		addAnnotation("text", lastColumn, false);
+		setTextColumn("text", true);
+		
+		filenameList.add("Document");
+	}
+
 	// wrap a single unannotated plain-text instance as a DocumentList
 	public DocumentList(String instance)
 	{
@@ -287,7 +320,10 @@ public class DocumentList implements Serializable
                         while((line = in.readNextMeaningful()) != null){
                                 String[] instance = new String[line.length];
                                 for(int i = 0; i < line.length; i++){
-                                        instance[i] = line[i].replaceAll("[^\r\n\\p{ASCII}]", "");
+									// if(!line[i].contains("PredictedTestData"))
+									// 	instance[i] = line[i].replaceAll("[^\r\n\\p{ASCII}]", "").toLowerCase();
+									// else
+										instance[i] = line[i].replaceAll("[^\r\n\\p{ASCII}]", "").replaceAll("[^a-zA-Z- ]", "");
                                 }
                                 for(int i = 0; i < instance.length; i++){
                                         String value = instance[i];
@@ -327,6 +363,13 @@ public class DocumentList implements Serializable
                 totalLines += lineID;
         }
 //      consolidateFileStructures(annotationList);
+		// for(String key:allAnnotations.keySet()){
+		// 	List<String> listStr = allAnnotations.get(key);
+			
+		// 	System.out.println("KEY: " + key);
+		// 	for(String str:listStr)
+		// 		System.out.println("str: " + str);
+		// }
         localName.trim();
         setName(localName);
 	}
