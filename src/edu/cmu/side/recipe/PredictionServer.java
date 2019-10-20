@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -79,7 +78,6 @@ import plugins.features.ColumnFeatures;
 import plugins.learning.WekaBayes;
 import plugins.learning.WekaLogit;
 import plugins.learning.WekaSVM;
-
 
 
 /**
@@ -156,13 +154,13 @@ public class PredictionServer implements Container {
 			response.setValue("Server", "HelloWorld/1.0 (Simple 4.0)");
 			response.setValue("Access-Control-Allow-Origin", "*");
 			// Request headers you wish to allow
-			response.setValue("Access-Control-Allow-Headers", "Access-Control-Allow-Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Headers, Origin, X-Requested-With, Content-Type, Accept, Authorization");
+			response.setValue("Access-Control-Allow-Headers", "Content-Type, authorization");
 			// Request methods you wish to allow
-			response.setValue("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE, PATCH");
+			response.setValue("Access-Control-Allow-Methods", "POST, GET");
 			response.setDate("Date", time);
 			response.setDate("Last-Modified", time);
 
-			response.setValue("Content-Type", "application/json;charset=utf-8");
+			
 			if (target.equalsIgnoreCase("/upload")) {
 				if (request.getMethod().equalsIgnoreCase("POST")) {
 					answer = handleUpload(request, response);
@@ -172,10 +170,10 @@ public class PredictionServer implements Container {
 
 			}
 
-			else if (target.equals("/uploadinput")) {
+			else if (target.equalsIgnoreCase("/uploadinput")) {
 				
-				if (request.getMethod().equals("POST")) {
-					System.out.println("combobox entry fetched:"+request.getPart("algo").getContent());
+				if (request.getMethod().equalsIgnoreCase("POST")) {
+					
 					answer = handleUploadInputDocument(request, response);
 					if (answer!="")
 					{				
@@ -195,17 +193,9 @@ public class PredictionServer implements Container {
 			else if (target.startsWith("/predicttest")) {
 				
 				if (request.getMethod().equalsIgnoreCase("POST")) {
+					response.setValue("Content-Type", "application/json;charset=utf-8");
 					answer = handleTestPredict(request, response);
-					if (answer!="")
-					{				
-//						answer= response.getDescription();
-						response.setValue("file Uploaded","Success");
-						response.setValue("Accuracy",answer);
-						response.setDescription(answer);
-						response.setDescription("OK");
-						logger.fine("response is"+response.getDescription());
-					}
-						
+											
 				} else {
 					answer = handleGetPredict(request, response);
 				}
@@ -562,7 +552,7 @@ public class PredictionServer implements Container {
 	
 	public String handleBuildModel(Recipe plan,String algo) {
 		String accuracy="";
-		Map<LearningPlugin, Boolean> learningPlugins;
+
 		SIDEPlugin[] learners = PluginManager.getSIDEPluginArrayByType("model_builder");
 		
 		if (algo.equalsIgnoreCase("naive"))
@@ -910,8 +900,7 @@ public class PredictionServer implements Container {
 	        } catch (Exception e) {
 	            e.printStackTrace();
 	        }
-			
-	/*		if(algo.equals("naive"))
+	        /*		if(algo.equals("naive"))
 			{
 				plugin_config_naive.put("Bigrams","false");
 				plugin_config_naive.put("Contains Non-Stopwords","false");
