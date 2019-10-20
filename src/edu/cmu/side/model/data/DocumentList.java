@@ -253,21 +253,23 @@ public class DocumentList implements Serializable
                 ArrayList<Integer> blanks = new ArrayList<Integer>();
                 ArrayList<Integer> extras = new ArrayList<Integer>();
                 int lineID = 0;
-
                 try{
                         File f = new File(filename);
-                        if(!f.exists())
-                                f = new File(Workbench.dataFolder.getAbsolutePath(), filename.substring(Math.max(filename.lastIndexOf("/"), filename.lastIndexOf("\\"))+1));
+                        if(!f.exists()){
+                        	 f = new File(Workbench.dataFolder.getAbsolutePath(), filename.substring(Math.max(filename.lastIndexOf("/"), filename.lastIndexOf("\\"))+1));
+                        }                      
                         in = new CSVReader(new FileReader(f));
-                        String[] headers = in.readNextMeaningful();
+                        String[] headers = in.readNextMeaningful();  
+                      
                         List<Integer> annotationColumns = new ArrayList<Integer>();
+                     
                         for(int i = 0; i < headers.length; i++){
                                 headers[i] = headers[i].trim();
+                    
                                 if(headers[i].length()>0){
                                         annotationColumns.add(i);
                                 }
-                        }
-                        
+                        }                                        
                         for(String annotation : headers){
                                 if(annotation.length() > 0 && !allAnnotations.containsKey(annotation)){
                                         allAnnotations.put(annotation, new ArrayList<String>());
@@ -279,9 +281,9 @@ public class DocumentList implements Serializable
                                         }
                                 }
                         }
-
+                    
                         String[] line;
-
+                        
                         while((line = in.readNextMeaningful()) != null){
                                 String[] instance = new String[line.length];
                                 for(int i = 0; i < line.length; i++){
@@ -303,6 +305,7 @@ public class DocumentList implements Serializable
                                 filenameList.add(filename);
                                 lineID++;
                         }
+                        
                         //Now, fill unfilled areas with empty strings
                         Set<String> toRemoveSet = new HashSet<String>(Arrays.asList(headers));
                         Set<String> removedAnnotations = new HashSet<String>(allAnnotations.keySet());
@@ -311,6 +314,7 @@ public class DocumentList implements Serializable
                         Arrays.fill(empty, emptyAnnotationString);
                         for(String emptyAnnotation : removedAnnotations){
                                 allAnnotations.get(emptyAnnotation).addAll(Arrays.asList(empty));
+                                
                         }
                 }catch(Exception e){
                 	
