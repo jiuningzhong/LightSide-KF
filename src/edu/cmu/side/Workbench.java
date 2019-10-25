@@ -33,6 +33,7 @@ public class Workbench{
 	static public String BASE_PATH = rootFolder.getAbsolutePath() + PLATFORM_FILE_SEPARATOR;
 	static public File PLUGIN_FOLDER = new File(BASE_PATH, "plugins");
 	public static File dataFolder = new File(rootFolder, "testData");
+	public static File trainDataFolder = new File(rootFolder, "trainData");
 	public static File stopwordsFolder = new File(dataFolder, "stopwords");
 	public static File csvFolder = dataFolder;
 	public static File toolkitsFolder = new File(rootFolder, "toolkits");

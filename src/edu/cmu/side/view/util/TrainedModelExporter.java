@@ -12,6 +12,7 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import edu.cmu.side.Workbench;
 import edu.cmu.side.model.Recipe;
 import edu.cmu.side.model.data.TrainingResult;
 
@@ -92,6 +93,27 @@ public class TrainedModelExporter
 					exportForPrediction(tableRecipe, f);
 				else if (chooser.getFileFilter() == sideFilter) exportToSerialized(tableRecipe, f);
 			}
+		}
+		catch (Exception e)
+		{
+			String message = e.getMessage();
+			if (result == null)
+				message = "Training Result is null.";
+			else if (message == null || message.isEmpty()) message = "Couldn't save feature table.";
+			JOptionPane.showMessageDialog(null, message);
+			e.printStackTrace();
+		}
+
+	}
+	
+	public static void exportTrainedModel(Recipe tableRecipe, String filename)
+	{
+		TrainingResult result = tableRecipe.getTrainingResult();
+		try
+		{
+			final String destpath = Workbench.trainDataFolder.getAbsolutePath();
+			File f= new File(destpath+"/"+ filename + ".xml" ); // result.getName()
+			exportForPrediction(tableRecipe, f);			
 		}
 		catch (Exception e)
 		{

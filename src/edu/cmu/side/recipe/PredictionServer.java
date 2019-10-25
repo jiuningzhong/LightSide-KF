@@ -73,11 +73,13 @@ import edu.cmu.side.util.MyHtmlFormatter;
 import edu.cmu.side.view.util.CSVExporter;
 import edu.cmu.side.view.util.DocumentListTableModel;
 import edu.cmu.side.view.util.SwingUpdaterLabel;
+import edu.cmu.side.view.util.TrainedModelExporter;
 import plugins.features.BasicFeatures;
 import plugins.features.ColumnFeatures;
 import plugins.learning.WekaBayes;
 import plugins.learning.WekaLogit;
 import plugins.learning.WekaSVM;
+
 
 
 /**
@@ -154,13 +156,13 @@ public class PredictionServer implements Container {
 			response.setValue("Server", "HelloWorld/1.0 (Simple 4.0)");
 			response.setValue("Access-Control-Allow-Origin", "*");
 			// Request headers you wish to allow
-			response.setValue("Access-Control-Allow-Headers", "Content-Type, authorization");
+			response.setValue("Access-Control-Allow-Headers", "Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Headers, Origin, X-Requested-With, Content-Type, Accept, Authorization");
 			// Request methods you wish to allow
-			response.setValue("Access-Control-Allow-Methods", "POST, GET");
+			response.setValue("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE, PATCH");
 			response.setDate("Date", time);
 			response.setDate("Last-Modified", time);
 
-			
+			response.setValue("Content-Type", "application/json;charset=utf-8");
 			if (target.equalsIgnoreCase("/upload")) {
 				if (request.getMethod().equalsIgnoreCase("POST")) {
 					answer = handleUpload(request, response);
@@ -193,9 +195,17 @@ public class PredictionServer implements Container {
 			else if (target.startsWith("/predicttest")) {
 				
 				if (request.getMethod().equalsIgnoreCase("POST")) {
-					response.setValue("Content-Type", "application/json;charset=utf-8");
 					answer = handleTestPredict(request, response);
-											
+					if (answer!="")
+					{				
+//						answer= response.getDescription();
+						response.setValue("file Uploaded","Success");
+						response.setValue("Accuracy",answer);
+						response.setDescription(answer);
+						response.setDescription("OK");
+						logger.fine("response is"+response.getDescription());
+					}
+						
 				} else {
 					answer = handleGetPredict(request, response);
 				}
@@ -757,14 +767,14 @@ public class PredictionServer implements Container {
 		// idea statements
 		if(annot.equalsIgnoreCase("L-I"))
 		{
-			train_file="Train_KF2.csv";
+			train_file="Train_KF2";
 			predictedLabel = "Complexity_level";
 			annot = "Complexity_level";
 		}
 		// questions
 		else if(annot.equalsIgnoreCase("L-Q"))
 		{
-			train_file="Train_question.csv";
+			train_file="Train_question";
 			predictedLabel = "question_type";
 			annot="question_type";
 		}
@@ -772,33 +782,33 @@ public class PredictionServer implements Container {
 		else if(annot.equalsIgnoreCase("all_type"))
 		{
 			//0.6288659793814433
-			train_file="Train_all_types.csv";
+			train_file="Train_all_types";
 			predictedLabel = "all_type";
 			annot="all_type";
 		}
 		// resources
 		else if(annot.equalsIgnoreCase("L-R"))
 		{
-			train_file="Train_resource.csv";
+			train_file="Train_resource";
 			predictedLabel = "resource_type";
 			annot="resource_type";
 		}
 		// explanations
 		else if(annot.equalsIgnoreCase("L-X"))
 		{
-			train_file="Train_KF_X.csv";
+			train_file="Train_KF_X";
 			predictedLabel = "Complexity_level";
 			annot = "Complexity_level";
 		}
 		// facts
 		else if(annot.equalsIgnoreCase("L-T"))
 		{
-			train_file="Train_KF_T.csv";
+			train_file="Train_KF_T";
 			predictedLabel = "Complexity_level";
 			annot = "Complexity_level";
 		}
 
-		logger.fine("annot: "+annot);
+		/*logger.fine("annot: "+annot);
 
 		logger.fine("predictedLabel: "+predictedLabel);
 
@@ -848,9 +858,7 @@ public class PredictionServer implements Container {
 			ObjectMapper mapper = new ObjectMapper();	 	 
 			Map<String, String> plugin_config_naive =new HashMap<String, String>();
 			Map<String, Object> map1 ;
-	        /**
-	         * Read JSON from a file into a Map
-	         */
+
 	        try {
 	        	
 	        	if(algo.equalsIgnoreCase("naive"))
@@ -900,50 +908,7 @@ public class PredictionServer implements Container {
 	        } catch (Exception e) {
 	            e.printStackTrace();
 	        }
-	        /*		if(algo.equals("naive"))
-			{
-				plugin_config_naive.put("Bigrams","false");
-				plugin_config_naive.put("Contains Non-Stopwords","false");
-				plugin_config_naive.put("Count Occurences","false");
-				plugin_config_naive.put("Ignore All-stopword N-Grams","false");
-				plugin_config_naive.put("Include Punctuation","true");
-				plugin_config_naive.put("Line Length","false");
-				plugin_config_naive.put("Normalize N-Gram Counts","false");
-				plugin_config_naive.put("POS Bigrams","false");
-				plugin_config_naive.put("POS Trigrams","false");
-				plugin_config_naive.put(" Skip Stopwords in N-Grams","false");
-				plugin_config_naive.put("Stem N-Grams","false");
-				plugin_config_naive.put("Track Feature Hit Location","true");
-				plugin_config_naive.put("Trigrams","false");
-				plugin_config_naive.put("Unigrams","true");
-				plugin_config_naive.put("Word/POS Pairs","false");
-				plan.addExtractor(b, plugin_config_naive);
-			}
-			else if (algo.equals("logistic"))
-			{
-				
-				plugin_config_naive.put("Bigrams","true");
-				plugin_config_naive.put("Contains Non-Stopwords","false");
-				plugin_config_naive.put("Count Occurences","true");
-				plugin_config_naive.put("Ignore All-stopword N-Grams","true");
-				plugin_config_naive.put("Include Punctuation","true");
-				plugin_config_naive.put("Line Length","true");
-				plugin_config_naive.put("Normalize N-Gram Counts","true");
-				plugin_config_naive.put("POS Bigrams","true");
-				plugin_config_naive.put("POS Trigrams","true");
-				plugin_config_naive.put(" Skip Stopwords in N-Grams","true");
-				plugin_config_naive.put("Stem N-Grams","true");
-				plugin_config_naive.put("Track Feature Hit Location","false");
-				plugin_config_naive.put("Trigrams","true");
-				plugin_config_naive.put("Unigrams","true");
-				plugin_config_naive.put("Word/POS Pairs","true");
-				plan.addExtractor(b, plugin_config_naive);
-				
-				Map<String, String> plugin_config_log = new HashMap<String, String>(); 
-				plugin_config_log.put("Complexity_type", "NOMINAL");
-				//plugin_config_log.put("E: Evidence", "NOMINAL");
-				plan.addExtractor(c, plugin_config_log);
-			}  */
+	        
 			boolean halt=false;
 			
 			
@@ -981,6 +946,8 @@ public class PredictionServer implements Container {
 			Collection<Feature> features=plan.getFeatureTable().getSortedFeatures();
 			logger.fine("Number of features extracted:"+ features.size());
 			logger.fine("Created Feature Extraction!!");
+			
+			
 			jsonStr = handleBuildModel(plan,algo);
 			logger.fine(jsonStr);
 			
@@ -989,7 +956,15 @@ public class PredictionServer implements Container {
 			Collection<Recipe> recipelist=Workbench.getRecipeManager().getRecipeCollectionByType(RecipeManager.Stage.TRAINED_MODEL);
 			
 			List<Recipe> rplist=new ArrayList<Recipe>(recipelist);
-			Recipe trainedModel= rplist.get(rplist.size()-1);
+			Recipe trainedModel= rplist.get(rplist.size()-1);*/
+
+			// save the training Recipe to the training folder
+			// TrainedModelExporter.exportTrainedModel(trainedModel, train_file);
+			final String destpath = Workbench.trainDataFolder.getAbsolutePath();
+			//File f= new File(destpath+"/"+ train_file + ".xml" );			
+		
+			Recipe trainedModel = Chef.loadRecipe(destpath+"/"+ train_file + ".xml");
+			
 			boolean useEvaluation=false;
 			boolean showDists=true;
 			boolean overwrite=false;
@@ -1032,7 +1007,6 @@ public class PredictionServer implements Container {
 					// logger.fine("Complexity_type: " + typeString);
 				}
 				logger.fine("annot: " + annot);
-				logger.fine("recipelist size: " + recipelist.size());
 
 				//creating a document list and setting all the required parameters for feature extraction
 				//originalDocs = new DocumentList(testfiles);

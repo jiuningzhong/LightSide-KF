@@ -92,20 +92,20 @@ public class ConverterControl
 			{
 
 				Recipe recipe;
-				if (format == RecipeFileFormat.XML)
-				{
-					recipe = ConverterControl.readFromXML(recipeFile);
-				}
-				else if (format == RecipeFileFormat.ZIPPED_XML)
-				{
-					recipe = ConverterControl.readFromZippedXML(recipeFile);
-				}
-				else
-				{
+//				if (format == RecipeFileFormat.XML)
+//				{
+//					recipe = ConverterControl.readFromXML(recipeFile);
+//				}
+//				else if (format == RecipeFileFormat.ZIPPED_XML)
+//				{
+//					recipe = ConverterControl.readFromZippedXML(recipeFile);
+//				}
+//				else
+//				{
 					ObjectInputStream ois = new ObjectInputStream(new FileInputStream(recipeFile));
 					recipe = (Recipe) ois.readObject();
 					ois.close();
-				}
+//				}
 
 				return recipe;
 
