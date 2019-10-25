@@ -1047,7 +1047,9 @@ public class PredictionServer implements Container {
 				|| jsonString.equalsIgnoreCase("I agree with you too") 
 				|| jsonString.equalsIgnoreCase("i dont know") 
 				|| jsonString.equalsIgnoreCase("so dark") 
-				|| jsonString.equalsIgnoreCase("testing this")){
+				|| jsonString.equalsIgnoreCase("testing this")
+				|| (jsonString.contains(" ") && jsonString.split(" ").length==2)
+				|| !jsonString.contains(" ") ){
 					// Insufficient data. Please write more.
 					rJson = new ResponseJson(requestID, "L-IS", "", jsonStr, "", "", "", "");
 				} else //if( 
