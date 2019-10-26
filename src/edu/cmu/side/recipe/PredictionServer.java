@@ -111,6 +111,8 @@ public class PredictionServer implements Container {
 		Connection connection = new SocketConnection(server);
 		SocketAddress address = new InetSocketAddress(port);
 
+		loadTrainedModel();
+		
 		connection.connect(address);
 		logger.setLevel(Level.INFO);
 		logger.fine("Started server on port " + port + ".");
@@ -140,6 +142,27 @@ public class PredictionServer implements Container {
 			}
 
 		});
+	}
+	
+	// this function takes care of loading all the training models to the WorkBench
+	private static void loadTrainedModel() throws FileNotFoundException, IOException {
+		
+		String[] fileArray = {"Train_KF2", "Train_question", "Train_all_types", "Train_resource", "Train_KF_X", "Train_KF_T"};
+
+		final String destpath = Workbench.trainDataFolder.getAbsolutePath();
+		
+		for(String file:fileArray) {
+	
+			Recipe trainedModel = Chef.loadRecipe(destpath+"/"+ file + ".xml");
+			
+			trainedModel.setRecipeName(file);
+			
+			logger.info("Recipe Name: " + trainedModel.getRecipeName() + " stage: " + trainedModel.getStage().name());
+			
+			Workbench.update(RecipeManager.Stage.TRAINED_MODEL);
+			Workbench.getRecipeManager().addRecipe(trainedModel); 
+		
+		}
 	}
 
 	public void handleRequest(Request request, Response response) {
@@ -751,7 +774,7 @@ public class PredictionServer implements Container {
 			jsonStr = objectMapper.writeValueAsString(rj);
 			writeToDB(rj);
 		}
-		logger.info("json: " + jsonStr);
+
 		logger.fine("json: " + jsonStr);
 		return jsonStr;
 	}
@@ -814,10 +837,10 @@ public class PredictionServer implements Container {
 
 		logger.fine("algo: "+algo);
 		final String destpath = Workbench.dataFolder.getAbsolutePath();
-		File f= new File(destpath+"/"+train_file);
+		File f= new File(destpath+"/"+train_file+".csv");
 		logger.fine("Training file dir: "+destpath+"/"+train_file);
 		Set<String> files = new HashSet<String>();
-			files.add(train_file);
+			files.add(train_file+".csv");
 			//creating a document list and setting all the required parameters for feature extraction
 			DocumentList d = new DocumentList(files);
 			if (d.getTextColumns().contains(annot))
@@ -960,10 +983,19 @@ public class PredictionServer implements Container {
 
 			// save the training Recipe to the training folder
 			// TrainedModelExporter.exportTrainedModel(trainedModel, train_file);
-			final String destpath = Workbench.trainDataFolder.getAbsolutePath();
-			//File f= new File(destpath+"/"+ train_file + ".xml" );			
+			// 1. uncomment the previous lines
+			// loading training models from xml files
+			// final String destpath = Workbench.trainDataFolder.getAbsolutePath();
+			// trainedModel = Chef.loadRecipe(destpath+"/"+ train_file + ".xml");
 		
-			Recipe trainedModel = Chef.loadRecipe(destpath+"/"+ train_file + ".xml");
+			Collection<Recipe> recipelist = Workbench.getRecipeManager().getRecipeCollectionByType(RecipeManager.Stage.PREDICTION_ONLY);
+			Recipe trainedModel = null;
+			
+			for(Recipe r:recipelist) {
+				if(r.getRecipeName().equalsIgnoreCase(train_file)) {
+					trainedModel = r;
+				}
+			}
 			
 			boolean useEvaluation=false;
 			boolean showDists=true;
@@ -1112,7 +1144,7 @@ public class PredictionServer implements Container {
 			// 	answer="Success";
 			// }
 			
-			Workbench.getRecipeManager().deleteRecipe(trainedModel);
+			// Workbench.getRecipeManager().deleteRecipe(trainedModel);
 			// trainedModel.setDocumentList(newDocs);
 			// Workbench.getRecipeManager().addRecipe(trainedModel);
 			
