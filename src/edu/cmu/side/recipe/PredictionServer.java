@@ -179,13 +179,12 @@ public class PredictionServer implements Container {
 			response.setValue("Server", "HelloWorld/1.0 (Simple 4.0)");
 			response.setValue("Access-Control-Allow-Origin", "*");
 			// Request headers you wish to allow
-			response.setValue("Access-Control-Allow-Headers", "Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Allow-Headers, Origin, X-Requested-With, Content-Type, Accept, Authorization");
+			response.setValue("Access-Control-Allow-Headers", "Content-Type, authorization");
 			// Request methods you wish to allow
-			response.setValue("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS, DELETE, PATCH");
+			response.setValue("Access-Control-Allow-Methods", "POST, GET");
 			response.setDate("Date", time);
 			response.setDate("Last-Modified", time);
 
-			response.setValue("Content-Type", "application/json;charset=utf-8");
 			if (target.equalsIgnoreCase("/upload")) {
 				if (request.getMethod().equalsIgnoreCase("POST")) {
 					answer = handleUpload(request, response);
@@ -216,18 +215,9 @@ public class PredictionServer implements Container {
 			}
 			
 			else if (target.startsWith("/predicttest")) {
-				
+				response.setValue("Content-Type", "application/json;charset=utf-8");
 				if (request.getMethod().equalsIgnoreCase("POST")) {
 					answer = handleTestPredict(request, response);
-					if (answer!="")
-					{				
-//						answer= response.getDescription();
-						response.setValue("file Uploaded","Success");
-						response.setValue("Accuracy",answer);
-						response.setDescription(answer);
-						response.setDescription("OK");
-						logger.fine("response is"+response.getDescription());
-					}
 						
 				} else {
 					answer = handleGetPredict(request, response);
