@@ -770,7 +770,7 @@ public class PredictionServer implements Container {
 	}
 	
 	private ResponseJson classifyPrediction(Request request, Response response, String annot) throws IOException, FileNotFoundException {
-		String algo="logistic";
+		String algo="svm";
 		boolean type = true;
 		String jsonStr = "";
 		String train_file = "";
@@ -971,12 +971,14 @@ public class PredictionServer implements Container {
 			List<Recipe> rplist=new ArrayList<Recipe>(recipelist);
 			Recipe trainedModel= rplist.get(rplist.size()-1);*/
 
+			// 1. uncomment the previous lines
 			// save the training Recipe to the training folder
 			// TrainedModelExporter.exportTrainedModel(trainedModel, train_file);
-			// 1. uncomment the previous lines
+			// 2. comment out loadTrainedModel()
+
 			// loading training models from xml files
-			// final String destpath = Workbench.trainDataFolder.getAbsolutePath();
-			// trainedModel = Chef.loadRecipe(destpath+"/"+ train_file + ".xml");
+			// final String traindestpath = Workbench.trainDataFolder.getAbsolutePath();
+			// trainedModel = Chef.loadRecipe(traindestpath+"/"+ train_file + ".xml");
 		
 			Collection<Recipe> recipelist = Workbench.getRecipeManager().getRecipeCollectionByType(RecipeManager.Stage.PREDICTION_ONLY);
 			Recipe trainedModel = null;

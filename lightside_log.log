@@ -12285,3 +12285,243 @@ Zero Weights processed. Default weights will be used
 Zero Weights processed. Default weights will be used
 ^CThu 10/24/2019 21:37:11.56
 Error: Could not find or load main class edu.cmu.side.Workbench
+Tue 11/12/2019 20:29:12.04
+Nov 12, 2019 8:29:16 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeSystemARPACK
+Nov 12, 2019 8:29:16 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeRefARPACK
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+all annotations 
+all_type
+plug output name 	basic
+plan get extractor string /t{Bigrams=true, Contains Non-Stopwords=true, Count Occurences=true, Ignore All-stopword N-Grams=true, Include Punctuation=true, Line Length=true, Normalize N-Gram Counts=true, POS Bigrams=true, POS Trigrams=true, Skip Stopwords in N-Grams=true, Stem N-Grams=true, Track Feature Hit Location=false, Trigrams=true, Unigrams=true, Word/POS Pairs=true}
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/C:/Users/Jiuning/Documents/Python%20Scripts/LightSide-KF/lib/slf4j-log4j12-1.7.26.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/C:/Users/Jiuning/Documents/Python%20Scripts/LightSide-KF/lib/slf4j-simple-1.7.12.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+log4j:WARN No appenders could be found for logger (edu.stanford.nlp.tagger.maxent.MaxentTagger).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
+Nov 12, 2019 10:15:08 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Nov 12, 2019 10:15:24 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+5
+Act \ Pred
+L-I
+L-IS
+L-Q
+L-R
+saving 123POSgrams_pairs_length_norm_nostop (FEATURE_TABLE)
+REx: making new chooser 
+REx: returning chooser for filter [LightSide Feature Table XML: [features.xml], CSV: [features.csv, csv, CSV], ARFF (Weka): [features.arff, arff, ARFF]]
+[LightSide Feature Table XML: [features.xml], CSV: [features.csv, csv, CSV], ARFF (Weka): [features.arff, arff, ARFF], javax.swing.plaf.basic.BasicFileChooserUI$AcceptAllFileFilter@3510de5d]
+REx: selected file is 123POSgrams_pairs_length_norm_nostop.features.xml
+REx: showing dialog
+REx: final selected file is 123POSgrams_pairs_length_norm_nostop.features.xml
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+7
+all_type
+all_type_prediction
+all_type_prediction_L-I
+all_type_prediction_L-IS
+all_type_prediction_L-Q
+all_type_prediction_L-R
+text
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+all annotations 
+all_type
+plug output name 	basic
+plan get extractor string /t{Bigrams=true, Contains Non-Stopwords=true, Count Occurences=true, Ignore All-stopword N-Grams=true, Include Punctuation=true, Line Length=true, Normalize N-Gram Counts=true, POS Bigrams=true, POS Trigrams=true, Skip Stopwords in N-Grams=true, Stem N-Grams=true, Track Feature Hit Location=false, Trigrams=true, Unigrams=true, Word/POS Pairs=true}
+Nov 13, 2019 9:28:41 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+all annotations 
+all_type
+plug output name 	basic
+plan get extractor string /t{Bigrams=true, Contains Non-Stopwords=true, Count Occurences=true, Ignore All-stopword N-Grams=true, Include Punctuation=true, Line Length=true, Normalize N-Gram Counts=true, POS Bigrams=true, POS Trigrams=true, Skip Stopwords in N-Grams=true, Stem N-Grams=true, Track Feature Hit Location=false, Trigrams=true, Unigrams=true, Word/POS Pairs=true}
+Nov 13, 2019 9:29:52 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Nov 18, 2019 8:00:01 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+all annotations 
+all_type
+plug output name 	basic
+plan get extractor string /t{Bigrams=true, Contains Non-Stopwords=true, Count Occurences=true, Ignore All-stopword N-Grams=true, Include Punctuation=true, Line Length=true, Normalize N-Gram Counts=true, POS Bigrams=true, POS Trigrams=true, Skip Stopwords in N-Grams=true, Stem N-Grams=true, Track Feature Hit Location=false, Trigrams=true, Unigrams=true, Word/POS Pairs=true}
+Nov 18, 2019 8:31:55 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+Nov 18, 2019 8:35:16 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+Nov 18, 2019 8:41:26 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
