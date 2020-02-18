@@ -102,6 +102,7 @@ public class PredictionServer implements Container {
 	protected static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
 	// use isTraining flag to control whether to generate training files or not.
+	// the new change makes future integration of new training data convenient.
 	protected static boolean isTraining = false;
 
 	public static void serve(int port, int threads) throws Exception {
