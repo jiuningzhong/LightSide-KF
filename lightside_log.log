@@ -12525,3 +12525,279 @@ Workbench 111: Warning: cannot update null object.
 Workbench 111: Warning: cannot update null object.
 Workbench 111: Warning: cannot update null object.
 Workbench 111: Warning: cannot update null object.
+Mon 11/18/2019 22:00:16.71
+Nov 18, 2019 10:00:20 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeSystemARPACK
+Nov 18, 2019 10:00:20 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeRefARPACK
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+all annotations 
+all_type
+plug output name 	basic
+plan get extractor string /t{Bigrams=true, Contains Non-Stopwords=true, Count Occurences=true, Ignore All-stopword N-Grams=true, Include Punctuation=true, Line Length=true, Normalize N-Gram Counts=true, POS Bigrams=true, POS Trigrams=true, Skip Stopwords in N-Grams=true, Stem N-Grams=true, Track Feature Hit Location=false, Trigrams=true, Unigrams=true, Word/POS Pairs=true}
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/C:/Users/Jiuning/Documents/Python%20Scripts/LightSide-KF/lib/slf4j-log4j12-1.7.26.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/C:/Users/Jiuning/Documents/Python%20Scripts/LightSide-KF/lib/slf4j-simple-1.7.12.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+log4j:WARN No appenders could be found for logger (edu.stanford.nlp.tagger.maxent.MaxentTagger).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
+Nov 18, 2019 10:01:48 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+^CMon 02/03/2020 21:14:11.31
+Feb 03, 2020 9:14:18 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeSystemARPACK
+Feb 03, 2020 9:14:18 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeRefARPACK
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+itemsstatechanged 2 eva; 	Character N-Grams	true
+itemsstatechanged 2 eva; 	Column Features	true
+itemsstatechanged 2 eva; 	English Parse Features	true
+itemsstatechanged 2 eva; 	Column Features	false
+itemsstatechanged 2 eva; 	Character N-Grams	false
+itemsstatechanged 2 eva; 	Character N-Grams	true
+itemsstatechanged 2 eva; 	English Parse Features	false
+itemsstatechanged 2 eva; 	Column Features	true
+itemsstatechanged 2 eva; 	Column Features	false
+all annotations 
+all_type
+plug output name 	basic
+plan get extractor string /t{Bigrams=true, Contains Non-Stopwords=false, Count Occurences=true, Ignore All-stopword N-Grams=false, Include Punctuation=true, Line Length=true, Normalize N-Gram Counts=false, POS Bigrams=true, POS Trigrams=true, Skip Stopwords in N-Grams=true, Stem N-Grams=true, Track Feature Hit Location=false, Trigrams=true, Unigrams=true, Word/POS Pairs=true}
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/C:/Users/Jiuning/Documents/Python%20Scripts/LightSide-KF/lib/slf4j-log4j12-1.7.26.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/C:/Users/Jiuning/Documents/Python%20Scripts/LightSide-KF/lib/slf4j-simple-1.7.12.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+log4j:WARN No appenders could be found for logger (edu.stanford.nlp.tagger.maxent.MaxentTagger).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
+plug output name 	char
+plan get extractor string /t{maxGram=4, Include Punctuation=true, minGram=3}
+Feb 04, 2020 6:14:43 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+itemsstatechanged 2 eva; 	English Parse Features	true
+itemsstatechanged 2 eva; 	English Parse Features	false
+itemsstatechanged eva; 	Average Cell Value
+itemsstatechanged eva; 	Vertical Difference
+itemsstatechanged eva; 	Vertical Difference
+itemsstatechanged eva; 	Average Cell Value
+itemsstatechanged eva; 	Average Cell Value
+itemsstatechanged eva; 	Frequency
+itemsstatechanged eva; 	Horizontal Absolute Difference
+itemsstatechanged eva; 	Horizontal Difference
+itemsstatechanged eva; 	Vertical Absolute Difference
+itemsstatechanged eva; 	Vertical Difference
+itemsstatechanged eva; 	Feature Influence
+Evaluating 14904 features for influence.
+itemsstatechanged eva; 	Feature Weight
+Evaluating instances for L-I
+Evaluating instances for L-IS
+Evaluating instances for L-Q
+Evaluating instances for L-R
+02/17/2020 Mon 18:56:31.91
+Feb 17, 2020 6:56:36 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeSystemARPACK
+Feb 17, 2020 6:56:36 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeRefARPACK
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+itemsstatechanged 2 eva; 	Character N-Grams	true
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+all annotations 
+all_type
+plug output name 	char
+plan get extractor string /t{maxGram=4, Include Punctuation=true, minGram=3}
+plug output name 	basic
+plan get extractor string /t{Bigrams=true, Contains Non-Stopwords=true, Count Occurences=true, Ignore All-stopword N-Grams=true, Include Punctuation=true, Line Length=true, Normalize N-Gram Counts=true, POS Bigrams=true, POS Trigrams=true, Skip Stopwords in N-Grams=true, Stem N-Grams=true, Track Feature Hit Location=false, Trigrams=true, Unigrams=true, Word/POS Pairs=true}
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/C:/Users/Jiuning/Documents/Python%20Scripts/LightSide-KF/lib/slf4j-log4j12-1.7.26.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/C:/Users/Jiuning/Documents/Python%20Scripts/LightSide-KF/lib/slf4j-simple-1.7.12.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+log4j:WARN No appenders could be found for logger (edu.stanford.nlp.tagger.maxent.MaxentTagger).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	Complexity_level
+viewing text columns
+text
+annot selecetedClass 	Complexity_level
+viewing text columns
+text
+annot selecetedClass 	Complexity_level
+viewing text columns
+text
+annot selecetedClass 	Complexity_level
+viewing text columns
+text
+annot selecetedClass 	Complexity_level
+viewing text columns
+text
+annot selecetedClass 	Complexity_level
+viewing text columns
+text
+annot selecetedClass 	Complexity_level
+viewing text columns
+text
+annot selecetedClass 	Complexity_level
+viewing text columns
+text
+annot selecetedClass 	Complexity_level
+viewing text columns
+text
+annot selecetedClass 	Complexity_level
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+viewing text columns
+text
+annot selecetedClass 	all_type
+all annotations 
+all_type
+plug output name 	char
+plan get extractor string /t{maxGram=4, Include Punctuation=true, minGram=3}
+plug output name 	basic
+plan get extractor string /t{Bigrams=true, Contains Non-Stopwords=true, Count Occurences=true, Ignore All-stopword N-Grams=true, Include Punctuation=true, Line Length=true, Normalize N-Gram Counts=true, POS Bigrams=true, POS Trigrams=true, Skip Stopwords in N-Grams=true, Stem N-Grams=true, Track Feature Hit Location=false, Trigrams=true, Unigrams=true, Word/POS Pairs=true}
+Feb 17, 2020 7:21:50 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+Feb 17, 2020 7:25:12 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Feb 17, 2020 7:31:05 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+Feb 17, 2020 7:32:56 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Zero Weights processed. Default weights will be used
+Feb 17, 2020 7:35:09 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+Workbench 111: Warning: cannot update null object.
+02/17/2020 Mon 20:26:07.06
+Feb 17, 2020 8:26:12 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeSystemARPACK
+Feb 17, 2020 8:26:12 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeRefARPACK

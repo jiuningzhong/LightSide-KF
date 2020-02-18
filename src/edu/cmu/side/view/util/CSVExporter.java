@@ -88,11 +88,9 @@ public class CSVExporter
 						{
 							s = obj.toString();
 //							s = s.replaceAll("[\n\r]+", " ");
-							if (s.contains(",") || s.contains("\"") || s.contains("�") || s.contains("�") || s.contains("\n") || s.contains("\r"))
+							if (s.contains(",") || s.contains("\"") || s.contains("\n") || s.contains("\r"))
 							{
 								s = s.replaceAll("\"", "\"\"");
-								s = s.replaceAll("�", "\"\"");
-								s = s.replaceAll("�", "\"\"");
 								s = "\"" + s + "\"";
 							}
 						}
