@@ -104,7 +104,24 @@ public class PredictionServer implements Container {
 
 	// use isTraining flag to control whether to generate training files or not.
 	// the new change makes future integration of new training data convenient.
-	protected static boolean isTraining = true;
+	private static boolean isTraining = false;
+	private static boolean isTrainingUpdated = false;
+
+	public static boolean isTraining() {
+		return isTraining;
+	}
+
+	public static void setTraining(boolean isToBeTrain) {
+		isTraining = isToBeTrain;
+	}
+
+	public static boolean isTrainingUpdated() {
+		return isTrainingUpdated;
+	}
+
+	public static void setTrainingUpdated(boolean isTUpdated) {
+		isTrainingUpdated = isTUpdated;
+	}
 
 	public static void serve(int port, int threads) throws Exception {
 		Container container = new PredictionServer(threads);
@@ -113,11 +130,11 @@ public class PredictionServer implements Container {
 		Connection connection = new SocketConnection(server);
 		SocketAddress address = new InetSocketAddress(port);
 
-		if (!isTraining)
+		if (!isTraining())
 			loadTrainedModel();
 
 		connection.connect(address);
-		logger.setLevel(Level.INFO);
+		logger.setLevel(Level.WARNING);
 		logger.fine("Started server on port " + port + ".");
 
 		fileTxt = new FileHandler("Logging.txt", true);
@@ -693,7 +710,6 @@ public class PredictionServer implements Container {
 		}
 		
 		logger.info("plan: " + plan);
-		System.out.println("plan: " + plan);
 
 		Workbench.update(RecipeManager.Stage.TRAINED_MODEL);
 		Workbench.getRecipeManager().addRecipe(plan);
@@ -955,32 +971,6 @@ public class PredictionServer implements Container {
 		predictedLabel = "Complexity_level";
 
 		Recipe trainedModel = null;
-
-		if (isTraining) {
-			System.out.println("annot: " + annot + " predictedLabel: " + predictedLabel + " train_file: " + train_file + " algo: " + algo);
-			logger.info("annot: " + annot + " predictedLabel: " + predictedLabel + " train_file: " + train_file + " algo: " + algo);
-			trainedModel = buildTrainingFiles(annot, predictedLabel, train_file, algo);
-			TrainedModelExporter.exportTrainedModel(trainedModel, train_file);
-		} else {
-			Collection<Recipe> recipelist = Workbench.getRecipeManager()
-					.getRecipeCollectionByType(RecipeManager.Stage.PREDICTION_ONLY);
-
-			for (Recipe r : recipelist) {
-				if (r.getRecipeName().equalsIgnoreCase(train_file)) {
-					trainedModel = r;
-				}
-			}
-		}
-
-		// 1. uncomment the previous lines
-		// save the training Recipe to the training folder
-		// TrainedModelExporter.exportTrainedModel(trainedModel, train_file);
-		// 2. comment out loadTrainedModel()
-
-		// loading training models from xml files
-		// final String traindestpath = Workbench.trainDataFolder.getAbsolutePath();
-		// trainedModel = Chef.loadRecipe(traindestpath+"/"+ train_file + ".xml");
-
 		boolean useEvaluation = false;
 		boolean showDists = true;
 		boolean overwrite = false;
@@ -993,33 +983,67 @@ public class PredictionServer implements Container {
 		String requestID = "", jsonString = "", typeString = "";
 		String currentTimeStamp = new SimpleDateFormat("MM-dd-yyyy").format(new Date());
 		String requestorName = "KF";
-
+		String isTrainingMode = "N";
+		
 		try {
+
 			if (query != null && query.get("jsonString") != null) {
 
 				requestID = (String) query.get("requestID");
 				jsonString = preprocessRawString((String) query.get("jsonString"));
 				requestorName = (String) query.get("requestorName");
+				isTrainingMode = (String) query.get("isTrainingMode");
 
-				logger.fine("requestID: " + requestID);
-				logger.fine("JSON: " + jsonString);
-				// jsonString = request.getPart("jsonStr").getContent();
-				// if(query.get("typeString")==null)
-				// typeString = "";
-				// else
-				// typeString = (String) query.get("typeString");
-				// logger.fine("query Complexity_level: " + typeString);
+				logger.info("requestID: " + requestID);
+				logger.info("JSON: " + jsonString);
+				if(isTrainingMode != null && isTrainingMode.equalsIgnoreCase("Y")) {
+					setTraining(true);
+					setTrainingUpdated(true);
+				} else {
+					setTraining(false);
+				}
+				logger.info("isTrainingMode: " + isTraining());
 			}
 
 			if (request.getPart("requestID") != null) {
 				requestID = request.getPart("requestID").getContent();
 				jsonString = preprocessRawString(request.getPart("jsonString").getContent());
 				requestorName = request.getPart("requestorName").getContent();
+				isTrainingMode = (String) request.getPart("isTrainingMode").getContent();
 
-				logger.fine("requestID: " + requestID);
-				logger.fine("JSON: " + jsonString);
-				// typeString = request.getPart("Complexity_level").getContent();
-				// logger.fine("Complexity_level: " + typeString);
+				logger.info("requestID: " + requestID);
+				logger.info("JSON: " + jsonString);
+				if(isTrainingMode != null && isTrainingMode.equalsIgnoreCase("Y")) {
+					setTraining(true);
+					setTrainingUpdated(true);
+				} else {
+					setTraining(false);
+				}
+				logger.info("isTrainingMode: " + isTraining());
+			}
+
+			if (isTraining()) {
+				logger.info("annot: " + annot + " predictedLabel: " + predictedLabel + " train_file: " + train_file + " algo: " + algo);
+				trainedModel = buildTrainingFiles(annot, predictedLabel, train_file, algo);
+				TrainedModelExporter.exportTrainedModel(trainedModel, train_file);
+			} 
+			
+			if(!isTraining()) {
+				
+				if(isTrainingUpdated()) {
+					loadTrainedModel();
+
+					setTrainingUpdated(false);
+				}
+				
+				Collection<Recipe> recipelist = Workbench.getRecipeManager()
+						.getRecipeCollectionByType(RecipeManager.Stage.PREDICTION_ONLY);
+
+				for (Recipe r : recipelist) {
+					if (r.getRecipeName().equalsIgnoreCase(train_file)) {
+						trainedModel = r;
+					}
+				}
 			}
 			logger.fine("annot: " + annot);
 
@@ -1027,20 +1051,16 @@ public class PredictionServer implements Container {
 			// extraction
 			// originalDocs = new DocumentList(testfiles);
 
-			// json string must not contain a url
-			// and sentence has only two words
-			// or sentence has no whitespace
-			if (jsonString != null 
-					&& (jsonString.equalsIgnoreCase("    i need to understand  --")
+			// json string must either be a url
+			// or sentence has >= three words
+			if (jsonString != null && (jsonString.equalsIgnoreCase("    i need to understand  --")
 					|| jsonString.equalsIgnoreCase("    my theory  - test-")
 					|| jsonString.equalsIgnoreCase("    my theory  --")
 					|| jsonString.equalsIgnoreCase("    putting our knowledge together  - i know that the anthills-")
 					|| jsonString.equalsIgnoreCase("    this theory cannot explain  - why animals-")
 					|| jsonString.equalsIgnoreCase("I agree with you too") || jsonString.equalsIgnoreCase("i dont know")
 					|| jsonString.equalsIgnoreCase("so dark") || jsonString.equalsIgnoreCase("testing this")
-					|| (jsonString.contains(" ") && jsonString.split(" ").length == 2) 
-					|| !jsonString.contains(" ")) 
-					&& !jsonString.contains("http")) {
+					|| (jsonString.contains(" ") && jsonString.split(" ").length == 2) || !jsonString.contains(" ")) && !jsonString.contains("http")) {
 				// Insufficient data. Please write more.
 				rJson = new ResponseJson(requestID, "L-IS", "", jsonStr, "", "", "", "");
 			} else // if(
@@ -1127,15 +1147,6 @@ public class PredictionServer implements Container {
 			e.printStackTrace();
 			ex = e;
 		}
-
-		// if(newDocs.getSize()!=0)
-		// {
-		// answer="Success";
-		// }
-
-		// Workbench.getRecipeManager().deleteRecipe(trainedModel);
-		// trainedModel.setDocumentList(newDocs);
-		// Workbench.getRecipeManager().addRecipe(trainedModel);
 
 		return rJson;
 	}
