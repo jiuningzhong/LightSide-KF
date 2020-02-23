@@ -1,0 +1,5 @@
+1. add training data into six training csv files(...\LightSide-KF\testData), and make sure the csv format is intact.
+2. use Postman or other tools to make two POST requests (make sure you can the response before making the next request)
+a) https://serd.uab.albany.edu/kf-ls/predicttest?requestID=123456&jsonString=The northern lights happen when the sun makes tiny bits of electricity go down to earth&requestorName=Ninad&isTrainingMode=Y
+
+b) https://serd.uab.albany.edu/kf-ls/predicttest?requestID=123456&jsonString=What evidence dose the worm home so sandy&requestorName=Ninad
