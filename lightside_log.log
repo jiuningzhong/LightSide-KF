@@ -1,0 +1,88 @@
+02/22/2020 Sat 21:33:36.85
+Feb 22, 2020 9:33:41 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeSystemARPACK
+Feb 22, 2020 9:33:41 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeRefARPACK
+itemsstatechanged 2 eva; 	Column Features	true
+itemsstatechanged 2 eva; 	Character N-Grams	true
+itemsstatechanged 2 eva; 	Column Features	false
+02/22/2020 Sat 21:35:16.17
+Feb 22, 2020 9:35:20 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeSystemARPACK
+Feb 22, 2020 9:35:20 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeRefARPACK
+itemsstatechanged 2 eva; 	Character N-Grams	true
+^C02/22/2020 Sat 22:00:10.28
+Feb 22, 2020 10:00:15 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeSystemARPACK
+Feb 22, 2020 10:00:15 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeRefARPACK
+itemsstatechanged 2 eva; 	Character N-Grams	true
+02/22/2020 Sat 22:38:32.62
+Feb 22, 2020 10:38:35 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeSystemARPACK
+Feb 22, 2020 10:38:35 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeRefARPACK
+itemsstatechanged 2 eva; 	Character N-Grams	true
+viewing text columns
+text
+annot selecetedClass 	Complexity_level
+viewing text columns
+text
+annot selecetedClass 	Complexity_level
+viewing text columns
+text
+annot selecetedClass 	Complexity_level
+viewing text columns
+text
+annot selecetedClass 	Complexity_level
+viewing text columns
+text
+annot selecetedClass 	Complexity_level
+viewing text columns
+text
+annot selecetedClass 	Complexity_level
+all annotations 
+Complexity_level
+plug output name 	char
+plan get extractor string /t{maxGram=4, Include Punctuation=true, minGram=3}
+plug output name 	basic
+plan get extractor string /t{Bigrams=true, Contains Non-Stopwords=true, Count Occurences=true, Ignore All-stopword N-Grams=true, Include Punctuation=true, Line Length=true, Normalize N-Gram Counts=true, POS Bigrams=true, POS Trigrams=true, Skip Stopwords in N-Grams=true, Stem N-Grams=true, Track Feature Hit Location=false, Trigrams=true, Unigrams=true, Word/POS Pairs=true}
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/C:/Users/Jiuning/Documents/Python%20Scripts/LightSide-KF/lib/slf4j-log4j12-1.7.26.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/C:/Users/Jiuning/Documents/Python%20Scripts/LightSide-KF/lib/slf4j-simple-1.7.12.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+log4j:WARN No appenders could be found for logger (edu.stanford.nlp.tagger.maxent.MaxentTagger).
+log4j:WARN Please initialize the log4j system properly.
+log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more info.
+all annotations 
+Complexity_level
+plug output name 	char
+plan get extractor string /t{maxGram=4, minGram=3}
+plug output name 	basic
+plan get extractor string /t{Bigrams=true, Contains Non-Stopwords=true, Count Occurences=true, Ignore All-stopword N-Grams=true, Include Punctuation=true, Line Length=true, Normalize N-Gram Counts=true, POS Bigrams=true, POS Trigrams=true, Skip Stopwords in N-Grams=true, Stem N-Grams=true, Track Feature Hit Location=false, Trigrams=true, Unigrams=true, Word/POS Pairs=true}
+Feb 22, 2020 10:41:19 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+Feb 22, 2020 10:42:21 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+all annotations 
+Complexity_level
+plug output name 	char
+plan get extractor string /t{maxGram=4, Include Punctuation=true, minGram=3}
+plug output name 	basic
+plan get extractor string /t{Bigrams=true, Contains Non-Stopwords=true, Count Occurences=true, Ignore All-stopword N-Grams=true, Include Punctuation=true, Line Length=true, Normalize N-Gram Counts=true, POS Bigrams=true, POS Trigrams=true, Skip Stopwords in N-Grams=true, Stem N-Grams=true, Track Feature Hit Location=false, Trigrams=true, Unigrams=true, Word/POS Pairs=true}
+all annotations 
+Complexity_level
+plug output name 	char
+plan get extractor string /t{maxGram=4, minGram=3}
+plug output name 	basic
+plan get extractor string /t{Bigrams=true, Contains Non-Stopwords=true, Count Occurences=true, Ignore All-stopword N-Grams=true, Include Punctuation=true, Line Length=true, Normalize N-Gram Counts=true, POS Bigrams=true, POS Trigrams=true, Skip Stopwords in N-Grams=true, Stem N-Grams=true, Track Feature Hit Location=false, Trigrams=true, Unigrams=true, Word/POS Pairs=true}
+Feb 22, 2020 10:43:52 PM edu.cmu.side.control.BuildModelControl$BuildModelTask doTask
+INFO: Training new model.
+^C02/22/2020 Sat 23:04:24.92
+Feb 22, 2020 11:04:28 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeSystemARPACK
+Feb 22, 2020 11:04:28 PM com.github.fommil.netlib.ARPACK <clinit>
+WARNING: Failed to load implementation from: com.github.fommil.netlib.NativeRefARPACK
+itemsstatechanged 2 eva; 	Character N-Grams	true
