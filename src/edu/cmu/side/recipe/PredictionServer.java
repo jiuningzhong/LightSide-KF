@@ -75,6 +75,7 @@ import edu.cmu.side.view.util.DocumentListTableModel;
 import edu.cmu.side.view.util.SwingUpdaterLabel;
 import edu.cmu.side.view.util.TrainedModelExporter;
 import plugins.features.BasicFeatures;
+import plugins.features.CharacterNGrams;
 import plugins.features.ColumnFeatures;
 import plugins.learning.WekaBayes;
 import plugins.learning.WekaLogit;
@@ -103,7 +104,7 @@ public class PredictionServer implements Container {
 
 	// use isTraining flag to control whether to generate training files or not.
 	// the new change makes future integration of new training data convenient.
-	protected static boolean isTraining = false;
+	protected static boolean isTraining = true;
 
 	public static void serve(int port, int threads) throws Exception {
 		Container container = new PredictionServer(threads);
@@ -521,7 +522,7 @@ public class PredictionServer implements Container {
 			plan.addExtractor(b, plugin_config_naive);
 
 			Map<String, String> plugin_config_log = new HashMap<String, String>();
-			plugin_config_log.put("Complexity_type", "NOMINAL");
+			plugin_config_log.put("Complexity_level", "NOMINAL");
 			plan.addExtractor(c, plugin_config_log);
 		}
 		boolean halt = false;
@@ -592,7 +593,7 @@ public class PredictionServer implements Container {
 		if (algo.equalsIgnoreCase("naive")) {
 			BuildModelControl.updateValidationSetting("annotation", "E: Evidence");
 		} else {
-			// BuildModelControl.updateValidationSetting("annotation", "Complexity_type");
+			// BuildModelControl.updateValidationSetting("annotation", "Complexity_level");
 		}
 
 		BuildModelControl.updateValidationSetting("foldMethod", "AUTO");
@@ -686,10 +687,13 @@ public class PredictionServer implements Container {
 				}
 			}
 		} catch (Exception e) {
-			logger.fine(e.getMessage());
+			logger.info(e.getMessage());
 			plan = null;
 
 		}
+		
+		logger.info("plan: " + plan);
+		System.out.println("plan: " + plan);
 
 		Workbench.update(RecipeManager.Stage.TRAINED_MODEL);
 		Workbench.getRecipeManager().addRecipe(plan);
@@ -792,14 +796,22 @@ public class PredictionServer implements Container {
 		// adding an extractor to recipe i.e Basic Features
 		FeaturePlugin b = new BasicFeatures();
 		FeaturePlugin c = new ColumnFeatures();
+		CharacterNGrams p = new CharacterNGrams();
+		p.setStayWithinWords(true);
+		p.setUseSharedPluginsWhenDeserializing(true);
+		
+		Map<String, String> plugin_config_basic = new HashMap<String, String>();
+		
+		
 		Collection<FeaturePlugin> plugins = new HashSet<FeaturePlugin>();
 		plugins.add(b);
 		if (algo.equalsIgnoreCase("logistic") || algo.equalsIgnoreCase("svm")) {
 			plugins.add(c);
+			plugins.add(p);
 		}
 
 		ObjectMapper mapper = new ObjectMapper();
-		Map<String, String> plugin_config_naive = new HashMap<String, String>();
+
 		Map<String, Object> map1;
 
 		try {
@@ -811,21 +823,21 @@ public class PredictionServer implements Container {
 						});
 
 				for (String w : map1.keySet()) {
-					plugin_config_naive.put(w, map1.get(w).toString());
+					plugin_config_basic.put(w, map1.get(w).toString());
 				}
-				plan.addExtractor(b, plugin_config_naive);
+				plan.addExtractor(b, plugin_config_basic);
 			} else if (algo.equalsIgnoreCase("logistic")) {
 				map1 = mapper.readValue(new File(destpath + "/Complexity.json"),
 						new TypeReference<Map<String, Object>>() {
 						});
 				for (String w : map1.keySet()) {
-					plugin_config_naive.put(w, map1.get(w).toString());
+					plugin_config_basic.put(w, map1.get(w).toString());
 				}
-				plan.addExtractor(b, plugin_config_naive);
+				plan.addExtractor(b, plugin_config_basic);
 				Map<String, String> plugin_config_log = new HashMap<String, String>();
 				// increase accuracy
 				// if (type&&annot.equalsIgnoreCase("Complexity_level"))
-				// plugin_config_log.put("Complexity_type", "NOMINAL");
+				// plugin_config_log.put("Complexity_level", "NOMINAL");
 				// plugin_config_log.put("E: Evidence", "NOMINAL");
 				plan.addExtractor(c, plugin_config_log);
 			} else if (algo.equalsIgnoreCase("svm")) {
@@ -833,11 +845,22 @@ public class PredictionServer implements Container {
 						new TypeReference<Map<String, Object>>() {
 						});
 				for (String w : map1.keySet()) {
-					plugin_config_naive.put(w, map1.get(w).toString());
+					plugin_config_basic.put(w, map1.get(w).toString());
 				}
-				plan.addExtractor(b, plugin_config_naive);
+				plan.addExtractor(b, plugin_config_basic);
+				
 				Map<String, String> plugin_config_log = new HashMap<String, String>();
 				plan.addExtractor(c, plugin_config_log);
+				
+				// INFO: activeExtractor: char34 getDescription: No description available.
+				// INFO: Feature Extraction Failed for char34
+				// plan.addExtractor(p, plugin_config_log);			
+				
+				Map<String, String> configMap = p.generateConfigurationSettings();
+				
+				for(String k:configMap.keySet()) {
+					logger.info("key: " + k + " value: " + configMap.get(k));
+				}
 			}
 
 		} catch (Exception e) {
@@ -854,12 +877,14 @@ public class PredictionServer implements Container {
 			for (SIDEPlugin plug : plan.getExtractors().keySet()) {
 				if (!halt) {
 					activeExtractor = (FeaturePlugin) plug;
+					logger.info("activeExtractor: " + activeExtractor.getDefaultName() + " getDescription: " + activeExtractor.getDescription());
 					hits.addAll(activeExtractor.extractFeatureHits(plan.getDocumentList(),
 							plan.getExtractors().get(plug), update));
+					logger.info("activeExtractor: " + activeExtractor.getDefaultName() + " getDescription: " + activeExtractor.getDescription());
 				}
 
 			}
-			logger.fine("size of hits" + hits.size());
+			logger.info("size of hits" + hits.size());
 			if (!halt) {
 				update.update("Building Feature Table");
 				FeatureTable ft = new FeatureTable(plan.getDocumentList(), hits, 5, annot, Type.NOMINAL);
@@ -872,12 +897,12 @@ public class PredictionServer implements Container {
 					"Couldn't finish the feature table.\nSee lightside_log for more details.\n"
 							+ e.getLocalizedMessage(),
 					"Feature Failure", JOptionPane.ERROR_MESSAGE);
-			System.err.println("Feature Extraction Failed");
+			logger.info("Feature Extraction Failed");
 		}
 
 		Collection<Feature> features = plan.getFeatureTable().getSortedFeatures();
-		logger.fine("Number of features extracted:" + features.size());
-		logger.fine("Created Feature Extraction!!");
+		logger.info("Number of features extracted:" + features.size());
+		logger.info("Created Feature Extraction!!");
 
 		String jsonStr = handleBuildModel(plan, algo);
 		logger.fine(jsonStr);
@@ -901,47 +926,39 @@ public class PredictionServer implements Container {
 		String predictedLabel = ""; // request.getPart("prediction_column").getContent();
 		ResponseJson rJson = null;
 
-		// idea statements
-		if (annot.equalsIgnoreCase("L-I")) {
-			train_file = "Train_KF2";
-			predictedLabel = "Complexity_level";
-			annot = "Complexity_level";
-		}
-		// questions
-		else if (annot.equalsIgnoreCase("L-Q")) {
-			train_file = "Train_question";
-			predictedLabel = "question_type";
-			annot = "question_type";
-		}
-		// all types
-		else if (annot.equalsIgnoreCase("all_type")) {
-			// 0.6288659793814433
-			train_file = "Train_all_types";
-			predictedLabel = "all_type";
-			annot = "all_type";
-		}
-		// resources
-		else if (annot.equalsIgnoreCase("L-R")) {
-			train_file = "Train_resource";
-			predictedLabel = "resource_type";
-			annot = "resource_type";
-		}
-		// explanations
-		else if (annot.equalsIgnoreCase("L-X")) {
-			train_file = "Train_KF_X";
-			predictedLabel = "Complexity_level";
-			annot = "Complexity_level";
-		}
-		// facts
-		else if (annot.equalsIgnoreCase("L-T")) {
-			train_file = "Train_KF_T";
-			predictedLabel = "Complexity_level";
-			annot = "Complexity_level";
-		}
+ 		// idea statements
+ 		if (annot.equalsIgnoreCase("L-I")) {
+ 			train_file = "Train_KF2";
+ 		}
+ 		// questions
+ 		else if (annot.equalsIgnoreCase("L-Q")) {
+ 			train_file = "Train_question";
+ 		}
+ 		// all types
+ 		else if (annot.equalsIgnoreCase("all_type")) {
+ 			// 0.6288659793814433
+ 			train_file = "Train_all_types";
+ 		}
+ 		// resources
+ 		else if (annot.equalsIgnoreCase("L-R")) {
+ 			train_file = "Train_resource";
+ 		}
+ 		// explanations
+ 		else if (annot.equalsIgnoreCase("L-X")) {
+ 			train_file = "Train_KF_X";
+ 		}
+ 		// facts
+ 		else if (annot.equalsIgnoreCase("L-T")) {
+ 			train_file = "Train_KF_T";
+ 		}
+		annot = "Complexity_level";
+		predictedLabel = "Complexity_level";
 
 		Recipe trainedModel = null;
 
 		if (isTraining) {
+			System.out.println("annot: " + annot + " predictedLabel: " + predictedLabel + " train_file: " + train_file + " algo: " + algo);
+			logger.info("annot: " + annot + " predictedLabel: " + predictedLabel + " train_file: " + train_file + " algo: " + algo);
 			trainedModel = buildTrainingFiles(annot, predictedLabel, train_file, algo);
 			TrainedModelExporter.exportTrainedModel(trainedModel, train_file);
 		} else {
@@ -991,7 +1008,7 @@ public class PredictionServer implements Container {
 				// typeString = "";
 				// else
 				// typeString = (String) query.get("typeString");
-				// logger.fine("query Complexity_type: " + typeString);
+				// logger.fine("query Complexity_level: " + typeString);
 			}
 
 			if (request.getPart("requestID") != null) {
@@ -1001,8 +1018,8 @@ public class PredictionServer implements Container {
 
 				logger.fine("requestID: " + requestID);
 				logger.fine("JSON: " + jsonString);
-				// typeString = request.getPart("Complexity_type").getContent();
-				// logger.fine("Complexity_type: " + typeString);
+				// typeString = request.getPart("Complexity_level").getContent();
+				// logger.fine("Complexity_level: " + typeString);
 			}
 			logger.fine("annot: " + annot);
 
@@ -1010,16 +1027,20 @@ public class PredictionServer implements Container {
 			// extraction
 			// originalDocs = new DocumentList(testfiles);
 
-			// json string must either be a url
-			// or sentence has >= three words
-			if (jsonString.equalsIgnoreCase("    i need to understand  --")
+			// json string must not contain a url
+			// and sentence has only two words
+			// or sentence has no whitespace
+			if (jsonString != null 
+					&& (jsonString.equalsIgnoreCase("    i need to understand  --")
 					|| jsonString.equalsIgnoreCase("    my theory  - test-")
 					|| jsonString.equalsIgnoreCase("    my theory  --")
 					|| jsonString.equalsIgnoreCase("    putting our knowledge together  - i know that the anthills-")
 					|| jsonString.equalsIgnoreCase("    this theory cannot explain  - why animals-")
 					|| jsonString.equalsIgnoreCase("I agree with you too") || jsonString.equalsIgnoreCase("i dont know")
 					|| jsonString.equalsIgnoreCase("so dark") || jsonString.equalsIgnoreCase("testing this")
-					|| (jsonString.contains(" ") && jsonString.split(" ").length == 2) || !jsonString.contains(" ")) {
+					|| (jsonString.contains(" ") && jsonString.split(" ").length == 2) 
+					|| !jsonString.contains(" ")) 
+					&& !jsonString.contains("http")) {
 				// Insufficient data. Please write more.
 				rJson = new ResponseJson(requestID, "L-IS", "", jsonStr, "", "", "", "");
 			} else // if(

@@ -72,10 +72,32 @@
         </map>
       </edu.cmu.side.model.OrderedPluginMap>
     </edu.cmu.side.model.OrderedPluginMap>
+    
     <edu.cmu.side.model.OrderedPluginMap serialization="custom">
-      <edu.cmu.side.model.OrderedPluginMap>
-        <list/>
-        <map/>
+      <edu.cmu.side.model.OrderedPluginMap>        
+        <list>
+          <string>plugins.features.CharacterNGrams</string>
+        </list>
+        
+        <map>
+          <entry>
+            <string>plugins.features.CharacterNGrams</string>
+            <tree-map>
+              <entry>
+                <string>Extract Across Whitespace</string>
+                <string>true</string>
+              </entry>
+              <entry>
+                <string>Include Punctuation</string>
+                <string>false</string>
+              </entry>
+              <entry>
+                <string>Track Hit Location</string>
+                <string>false</string>
+              </entry>
+            </tree-map>
+          </entry>
+        </map>
       </edu.cmu.side.model.OrderedPluginMap>
     </edu.cmu.side.model.OrderedPluginMap>
     <edu.cmu.side.model.OrderedPluginMap serialization="custom">
