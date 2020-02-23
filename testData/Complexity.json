@@ -10,7 +10,7 @@
   "Normalize N-Gram Counts": "true",
   "Include Punctuation": "true",
   "Stem N-Grams": "true",
-  " Skip Stopwords in N-Grams": "true",
+  "Skip Stopwords in N-Grams": "true",
   "Ignore All-stopword N-Grams": "true",
   "Contains Non-Stopwords": "true",
   "Track Feature Hit Location": "false"
