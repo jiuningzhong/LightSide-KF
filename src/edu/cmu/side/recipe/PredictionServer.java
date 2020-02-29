@@ -38,7 +38,10 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import javax.swing.JOptionPane;
+
+import org.json.JSONObject;
 import org.simpleframework.http.Part;
 import org.simpleframework.http.Query;
 import org.simpleframework.http.Request;
@@ -48,9 +51,11 @@ import org.simpleframework.http.core.ContainerServer;
 import org.simpleframework.transport.Server;
 import org.simpleframework.transport.connect.Connection;
 import org.simpleframework.transport.connect.SocketConnection;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 //import com.fasterxml.jackson.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import edu.cmu.side.Workbench;
 import edu.cmu.side.control.BuildModelControl;
 import edu.cmu.side.model.Recipe;
@@ -135,6 +140,8 @@ public class PredictionServer implements Container {
 
 		connection.connect(address);
 		logger.setLevel(Level.WARNING);
+		
+		//logger.setLevel(Level.INFO);
 		logger.fine("Started server on port " + port + ".");
 
 		fileTxt = new FileHandler("Logging.txt", true);
@@ -936,7 +943,6 @@ public class PredictionServer implements Container {
 	private ResponseJson classifyPrediction(Request request, Response response, String annot)
 			throws IOException, FileNotFoundException {
 		String algo = "svm";
-		boolean type = true;
 		String jsonStr = "";
 		String train_file = "";
 		String predictedLabel = ""; // request.getPart("prediction_column").getContent();
@@ -971,21 +977,45 @@ public class PredictionServer implements Container {
 		predictedLabel = "Complexity_level";
 
 		Recipe trainedModel = null;
-		boolean useEvaluation = false;
 		boolean showDists = true;
 		boolean overwrite = false;
 		DocumentList originalDocs;
 		DocumentList newDocs = null;
-		Exception ex = null;
 		String name = "PredictedTestData";
 
 		final Query query = request.getQuery();
-		String requestID = "", jsonString = "", typeString = "";
+		String requestID = "", jsonString = "", typeString = "", jsonContent = "";
 		String currentTimeStamp = new SimpleDateFormat("MM-dd-yyyy").format(new Date());
 		String requestorName = "KF";
 		String isTrainingMode = "N";
 		
 		try {
+			if(request.getContent()!=null && !request.getContent().equalsIgnoreCase("")) {
+				jsonContent = request.getContent(); 
+				System.out.println("request Content: " + jsonContent);
+				logger.info("request Content: " + jsonContent);
+				
+		    	JSONObject json = new JSONObject(jsonContent);      		    	
+		    	
+		    	if(jsonContent.contains("isTrainingMode"))
+					isTrainingMode = (String) json.get("isTrainingMode");
+		    	if(jsonContent.contains("requestID"))
+		    		requestID = String.valueOf((Integer)json.get("requestID"));
+		    	if(jsonContent.contains("jsonString"))
+		    		jsonString = preprocessRawString((String) json.get("jsonString"));
+		    	if(jsonContent.contains("requestorName"))
+		    		requestorName = (String) json.get("requestorName");
+
+				logger.info("JSON BLOACK requestID: " + requestID);
+				logger.info("JSON BLOACK JSON: " + jsonString);
+				if(isTrainingMode != null && isTrainingMode.equalsIgnoreCase("Y")) {
+					setTraining(true);
+					setTrainingUpdated(true);
+				} else {
+					setTraining(false);
+				}
+				logger.info("JSON BLOACK isTrainingMode: " + isTraining());
+			}
 
 			if (query != null && query.get("jsonString") != null) {
 
@@ -994,46 +1024,56 @@ public class PredictionServer implements Container {
 				requestorName = (String) query.get("requestorName");
 				isTrainingMode = (String) query.get("isTrainingMode");
 
-				logger.info("requestID: " + requestID);
-				logger.info("JSON: " + jsonString);
+				logger.info("BLOACK 1 requestID: " + requestID);
+				logger.info("BLOACK 1 JSON: " + jsonString);
 				if(isTrainingMode != null && isTrainingMode.equalsIgnoreCase("Y")) {
 					setTraining(true);
 					setTrainingUpdated(true);
 				} else {
 					setTraining(false);
 				}
-				logger.info("isTrainingMode: " + isTraining());
+				logger.info("BLOACK 1 isTrainingMode: " + isTraining());
 			}
 
 			if (request.getPart("requestID") != null) {
 				requestID = request.getPart("requestID").getContent();
-				jsonString = preprocessRawString(request.getPart("jsonString").getContent());
-				requestorName = request.getPart("requestorName").getContent();
-				isTrainingMode = (String) request.getPart("isTrainingMode").getContent();
 
-				logger.info("requestID: " + requestID);
-				logger.info("JSON: " + jsonString);
+				if(request.getPart("jsonString") != null)
+					jsonString = preprocessRawString(request.getPart("jsonString").getContent());	
+
+				if(request.getPart("requestorName") != null)
+					requestorName = request.getPart("requestorName").getContent();
+
+				if(request.getPart("isTrainingMode") != null)
+					isTrainingMode = (String) request.getPart("isTrainingMode").getContent();
+
+				logger.info("BLOACK 2 requestID: " + requestID);
+				logger.info("BLOACK 2 JSON: " + jsonString);
 				if(isTrainingMode != null && isTrainingMode.equalsIgnoreCase("Y")) {
 					setTraining(true);
 					setTrainingUpdated(true);
 				} else {
 					setTraining(false);
 				}
-				logger.info("isTrainingMode: " + isTraining());
+				logger.info("BLOACK 2 isTrainingMode: " + isTraining());
 			}
 
 			if (isTraining()) {
 				logger.info("annot: " + annot + " predictedLabel: " + predictedLabel + " train_file: " + train_file + " algo: " + algo);
+				logger.info("On Training");
 				trainedModel = buildTrainingFiles(annot, predictedLabel, train_file, algo);
 				TrainedModelExporter.exportTrainedModel(trainedModel, train_file);
 			} 
 			
 			if(!isTraining()) {
+				logger.info("Not On Training");
 				
 				if(isTrainingUpdated()) {
+					logger.info("Training updated is loaded...");
 					loadTrainedModel();
 
 					setTrainingUpdated(false);
+					logger.info("Training updated is set to false...");
 				}
 				
 				Collection<Recipe> recipelist = Workbench.getRecipeManager()
@@ -1053,6 +1093,7 @@ public class PredictionServer implements Container {
 
 			// json string must either be a url
 			// or sentence has >= three words
+			logger.info("jsonString: " + jsonString);	
 			if (jsonString != null && (jsonString.equalsIgnoreCase("    i need to understand  --")
 					|| jsonString.equalsIgnoreCase("    my theory  - test-")
 					|| jsonString.equalsIgnoreCase("    my theory  --")
@@ -1060,13 +1101,16 @@ public class PredictionServer implements Container {
 					|| jsonString.equalsIgnoreCase("    this theory cannot explain  - why animals-")
 					|| jsonString.equalsIgnoreCase("I agree with you too") || jsonString.equalsIgnoreCase("i dont know")
 					|| jsonString.equalsIgnoreCase("so dark") || jsonString.equalsIgnoreCase("testing this")
-					|| (jsonString.contains(" ") && jsonString.split(" ").length == 2) || !jsonString.contains(" ")) && !jsonString.contains("http")) {
+					|| (jsonString.contains(" ") && jsonString.split(" ").length == 2) || !jsonString.contains(" ")) 
+					&& !jsonString.contains("http")) {
 				// Insufficient data. Please write more.
+				logger.info("L-IS jsonString: " + jsonString);	
 				rJson = new ResponseJson(requestID, "L-IS", "", jsonStr, "", "", "", "");
 			} else // if(
 			// || (jsonString.contains(" ")&&jsonString.split(" ").length>2)
 			// (!jsonString.contains(" ")&&jsonString.contains("http")) )
 			{
+				logger.info("NOT L-IS jsonString: " + jsonString);	
 				originalDocs = new DocumentList(annot, jsonString, typeString);
 
 				originalDocs.setTextColumn("text", true);
@@ -1075,7 +1119,6 @@ public class PredictionServer implements Container {
 				// set "show distribution" to be true
 				newDocs = predictor.predict(originalDocs, name, showDists, overwrite);
 
-				String[] a = newDocs.getAnnotationNames();
 				Map<String, List<String>> allAnnotations = newDocs.allAnnotations();
 
 				// get distribution
@@ -1145,7 +1188,6 @@ public class PredictionServer implements Container {
 		} catch (Exception e) {
 			logger.fine(e.getMessage());
 			e.printStackTrace();
-			ex = e;
 		}
 
 		return rJson;
@@ -1184,7 +1226,6 @@ public class PredictionServer implements Container {
 
 	protected String preprocessRawString(String jsonStr) throws IOException {
 		String rtn = "";
-		final String destpath = Workbench.dataFolder.getAbsolutePath();
 		// PorterStemmer stemmer = new PorterStemmer();
 
 		// .toLowerCase()
@@ -1274,23 +1315,20 @@ public class PredictionServer implements Container {
 
 		List<Recipe> rp = new ArrayList<Recipe>(recipelist);
 		Recipe trainedModel = rp.get(0);
-		boolean useEvaluation = false;
 		boolean showDists = false;
 		boolean overwrite = false;
 		DocumentList originalDocs;
 		DocumentList newDocs = null;
-		Exception ex = null;
 		String name = "PredictedTestData";
 		try {
 			originalDocs = trainedModel.getDocumentList();
 
 			Predictor predictor = new Predictor(trainedModel, name);
 			newDocs = predictor.predict(originalDocs, name, showDists, overwrite);
-			String[] a = newDocs.getAnnotationNames();
 
 		} catch (Exception e) {
-			ex = e;
-
+			e.printStackTrace();
+			response.setCode(400);
 		}
 		if (newDocs.getSize() != 0) {
 			answer = "Success";
