@@ -41,6 +41,8 @@ import java.util.stream.Stream;
 
 import javax.swing.JOptionPane;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.simpleframework.http.Part;
 import org.simpleframework.http.Query;
@@ -992,15 +994,27 @@ public class PredictionServer implements Container {
 		try {
 			if(request.getContent()!=null && !request.getContent().equalsIgnoreCase("")) {
 				jsonContent = request.getContent(); 
+				
+				if(!isJSONValid( jsonContent )&& jsonContent.contains("\\")) {
+					jsonContent = jsonContent.replaceAll("\\\\", "");
+					int length = jsonContent.length();
+					jsonContent = jsonContent.substring(1, length-1);
+
+					System.out.println("request Content: " + jsonContent);
+					logger.info("request Content: " + jsonContent);
+				}
+
+				System.out.println("isJSONValid( jsonContent ): " + isJSONValid( jsonContent ));
 				System.out.println("request Content: " + jsonContent);
 				logger.info("request Content: " + jsonContent);
+				logger.info("isJSONValid( jsonContent ): " + isJSONValid( jsonContent ));
 				
 		    	JSONObject json = new JSONObject(jsonContent);      		    	
 		    	
 		    	if(jsonContent.contains("isTrainingMode"))
 					isTrainingMode = (String) json.get("isTrainingMode");
 		    	if(jsonContent.contains("requestID"))
-		    		requestID = String.valueOf((Integer)json.get("requestID"));
+		    		requestID = (String) json.get("requestID");
 		    	if(jsonContent.contains("jsonString"))
 		    		jsonString = preprocessRawString((String) json.get("jsonString"));
 		    	if(jsonContent.contains("requestorName"))
@@ -1476,5 +1490,18 @@ public class PredictionServer implements Container {
 			return false;
 		}
 	}
-
+	public boolean isJSONValid(String test) 
+	{ 
+		try {
+			new JSONObject(test); 
+		} 
+		catch (JSONException ex) 
+		{ // edited, to include @Arthur's comment 
+			// e.g. in case JSONArray is valid as well... 
+			try { 
+				new JSONArray(test); 
+			} catch (JSONException ex1) 
+			{ return false; } } 
+		return true;
+	}
 }
