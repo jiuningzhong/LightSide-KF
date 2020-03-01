@@ -987,7 +987,7 @@ public class PredictionServer implements Container {
 
 		final Query query = request.getQuery();
 		String requestID = "", jsonString = "", typeString = "", jsonContent = "";
-		String currentTimeStamp = new SimpleDateFormat("MM-dd-yyyy").format(new Date());
+		String currentTimeStamp = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").format(new Date());
 		String requestorName = "KF";
 		String isTrainingMode = "N";
 		
